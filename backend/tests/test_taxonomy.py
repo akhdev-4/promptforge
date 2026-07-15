@@ -133,3 +133,22 @@ async def test_category_tree_and_descendant_search(
     resp = await client.get(PROMPTS, params={"category_id": str(root.id)})
     titles = [x["title"] for x in resp.json()["items"]]
     assert "Login in child" in titles
+
+
+@pytest.mark.asyncio
+async def test_category_tree_endpoint_with_data(client: AsyncClient, db_session) -> None:
+    """Regression: the tree must not lazy-load the ORM `children` relationship
+    (which would raise MissingGreenlet in the sync serialization path)."""
+    from app.models.category import Category
+
+    root = Category(name="FrontendTree", slug="frontend-tree")
+    db_session.add(root)
+    await db_session.flush()
+    child = Category(name="Auth UI", slug="auth-ui-tree", parent_id=root.id)
+    db_session.add(child)
+    await db_session.flush()
+
+    resp = await client.get(CATEGORIES + "/tree")
+    assert resp.status_code == 200, resp.text
+    node = next(n for n in resp.json() if n["name"] == "FrontendTree")
+    assert [c["name"] for c in node["children"]] == ["Auth UI"]

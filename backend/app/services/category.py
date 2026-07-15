@@ -61,8 +61,22 @@ class CategoryService:
 
     async def get_tree(self) -> list[CategoryNode]:
         rows = await self.repo.all_ordered()
+        # Build nodes from scalar columns only. Using model_validate(from_attributes)
+        # would read the lazy `children` relationship and trigger async IO in a
+        # sync context (MissingGreenlet); we assemble the tree ourselves instead.
         nodes: dict[uuid.UUID, CategoryNode] = {
-            c.id: CategoryNode.model_validate(c, from_attributes=True) for c in rows
+            c.id: CategoryNode(
+                id=c.id,
+                name=c.name,
+                slug=c.slug,
+                description=c.description,
+                icon=c.icon,
+                parent_id=c.parent_id,
+                position=c.position,
+                created_at=c.created_at,
+                children=[],
+            )
+            for c in rows
         }
         roots: list[CategoryNode] = []
         for c in rows:
