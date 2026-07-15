@@ -1,0 +1,71 @@
+# Full production-faithful stack: Postgres + Redis + FastAPI + Next.js + nginx.
+# For zero-setup dev you can skip this and run each app directly (see READMEs).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: promptforge
+      POSTGRES_PASSWORD: promptforge
+      POSTGRES_DB: promptforge
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promptforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://promptforge:promptforge@db:5432/promptforge
+      REDIS_URL: redis://redis:6379/0
+      AUTO_CREATE_TABLES: "false"
+      ENVIRONMENT: production
+      DEBUG: "false"
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_in_production}
+      BACKEND_CORS_ORIGINS: http://localhost,http://localhost:3000
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Empty = same-origin: the browser calls /api/... on whatever host serves
+        # the app, which nginx proxies to the backend. Works on localhost, an IP,
+        # or a real domain without rebuilding.
+        NEXT_PUBLIC_API_URL: ""
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  pgdata:

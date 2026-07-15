@@ -1,0 +1,253 @@
+"""Prompt CRUD, versioning, copy, and fork endpoints."""
+
+from __future__ import annotations
+
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, status
+
+from app.api.deps import (
+    CurrentUser,
+    DbSession,
+    OptionalUser,
+    require_contributor,
+)
+from app.models.enums import PromptStatus, PromptType
+from app.models.user import User
+from app.recommendations import get_related_provider
+from app.repositories.prompt import SortKey
+from app.schemas.asset import AssetCreate, AssetRead, VersionCompare
+from app.schemas.collection import BookmarkResponse, LikeResponse
+from app.schemas.common import Page, PageParams
+from app.schemas.prompt import (
+    PromptContent,
+    PromptCreate,
+    PromptDetail,
+    PromptSummary,
+    PromptUpdate,
+    PromptVersionRead,
+    VersionCreate,
+)
+from app.services.interaction import InteractionService
+from app.services.prompt import PromptService
+
+router = APIRouter()
+
+
+@router.post(
+    "",
+    response_model=PromptDetail,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a prompt (seeds version 1)",
+)
+async def create_prompt(
+    data: PromptCreate,
+    db: DbSession,
+    user: Annotated[User, Depends(require_contributor)],
+) -> PromptDetail:
+    prompt = await PromptService(db).create(data, user)
+    return PromptDetail.model_validate(prompt)
+
+
+@router.get("", response_model=Page[PromptSummary], summary="List / search prompts")
+async def list_prompts(
+    db: DbSession,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    q: str | None = Query(None, description="Full-text-ish search over title/description/content"),
+    prompt_type: PromptType | None = None,
+    framework: str | None = None,
+    language: str | None = None,
+    ai_model: str | None = None,
+    status: PromptStatus | None = PromptStatus.PUBLISHED,
+    author_id: uuid.UUID | None = None,
+    category_id: uuid.UUID | None = Query(None, description="Includes descendant categories"),
+    component_id: uuid.UUID | None = Query(None, description="Variants in a component"),
+    tags: list[str] | None = Query(None, description="Tag slugs; matches any"),
+    sort: SortKey = "newest",
+) -> Page[PromptSummary]:
+    params = PageParams(page=page, size=size)
+    items, total = await PromptService(db).search(
+        offset=params.offset,
+        limit=params.limit,
+        q=q,
+        prompt_type=prompt_type,
+        framework=framework,
+        language=language,
+        ai_model=ai_model,
+        status=status,
+        author_id=author_id,
+        category_id=category_id,
+        component_id=component_id,
+        tags=tags,
+        sort=sort,
+    )
+    return Page.create([PromptSummary.model_validate(p) for p in items], total, params)
+
+
+@router.get("/{prompt_id}", response_model=PromptDetail, summary="Get a prompt (counts a view)")
+async def get_prompt(
+    prompt_id: uuid.UUID, db: DbSession, user: OptionalUser
+) -> PromptDetail:
+    prompt = await PromptService(db).get_detail(prompt_id)
+    detail = PromptDetail.model_validate(prompt)
+    if user is not None:
+        liked, bookmarked = await InteractionService(db).flags(user.id, prompt_id)
+        detail.is_liked = liked
+        detail.is_bookmarked = bookmarked
+    return detail
+
+
+@router.get(
+    "/{prompt_id}/related",
+    response_model=list[PromptSummary],
+    summary="Related / similar prompts (recommendations)",
+)
+async def related_prompts(
+    prompt_id: uuid.UUID, db: DbSession, limit: int = Query(6, ge=1, le=20)
+) -> list[PromptSummary]:
+    service = PromptService(db)
+    prompt = await service.get_detail(prompt_id, count_view=False)
+    provider = get_related_provider()
+    related = await provider.related(db, prompt, limit=limit)
+    return [PromptSummary.model_validate(p) for p in related]
+
+
+@router.patch("/{prompt_id}", response_model=PromptDetail, summary="Update prompt metadata")
+async def update_prompt(
+    prompt_id: uuid.UUID, data: PromptUpdate, db: DbSession, user: CurrentUser
+) -> PromptDetail:
+    prompt = await PromptService(db).update_metadata(prompt_id, data, user)
+    return PromptDetail.model_validate(prompt)
+
+
+@router.delete(
+    "/{prompt_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a prompt"
+)
+async def delete_prompt(prompt_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
+    await PromptService(db).delete(prompt_id, user)
+
+
+@router.post(
+    "/{prompt_id}/copy",
+    response_model=PromptContent,
+    summary="Copy a prompt (counts a copy)",
+)
+async def copy_prompt(prompt_id: uuid.UUID, db: DbSession) -> PromptContent:
+    prompt = await PromptService(db).copy(prompt_id)
+    return PromptContent(id=prompt.id, content=prompt.content, copies_count=prompt.copies_count)
+
+
+@router.post("/{prompt_id}/like", response_model=LikeResponse, summary="Toggle like")
+async def toggle_like(prompt_id: uuid.UUID, db: DbSession, user: CurrentUser) -> LikeResponse:
+    liked, count = await InteractionService(db).toggle_like(user.id, prompt_id)
+    return LikeResponse(liked=liked, likes_count=count)
+
+
+@router.post("/{prompt_id}/bookmark", response_model=BookmarkResponse, summary="Toggle bookmark")
+async def toggle_bookmark(
+    prompt_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> BookmarkResponse:
+    bookmarked = await InteractionService(db).toggle_bookmark(user.id, prompt_id)
+    return BookmarkResponse(bookmarked=bookmarked)
+
+
+@router.post(
+    "/{prompt_id}/fork",
+    response_model=PromptDetail,
+    status_code=status.HTTP_201_CREATED,
+    summary="Fork a prompt into your library",
+)
+async def fork_prompt(
+    prompt_id: uuid.UUID,
+    db: DbSession,
+    user: Annotated[User, Depends(require_contributor)],
+) -> PromptDetail:
+    fork = await PromptService(db).fork(prompt_id, user)
+    return PromptDetail.model_validate(fork)
+
+
+# --- Versions ---------------------------------------------------------------
+@router.post(
+    "/{prompt_id}/versions",
+    response_model=PromptVersionRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add a new version",
+)
+async def add_version(
+    prompt_id: uuid.UUID, data: VersionCreate, db: DbSession, user: CurrentUser
+) -> PromptVersionRead:
+    _, version = await PromptService(db).add_version(prompt_id, data, user)
+    return PromptVersionRead.model_validate(version)
+
+
+@router.get(
+    "/{prompt_id}/versions",
+    response_model=list[PromptVersionRead],
+    summary="List versions (newest first)",
+)
+async def list_versions(prompt_id: uuid.UUID, db: DbSession) -> list[PromptVersionRead]:
+    versions = await PromptService(db).list_versions(prompt_id)
+    return [PromptVersionRead.model_validate(v) for v in versions]
+
+
+@router.get(
+    "/{prompt_id}/versions/compare",
+    response_model=VersionCompare,
+    summary="Compare two versions (line diff)",
+)
+async def compare_versions(
+    prompt_id: uuid.UUID,
+    db: DbSession,
+    from_: int = Query(..., alias="from", ge=1),
+    to: int = Query(..., ge=1),
+) -> VersionCompare:
+    return await PromptService(db).compare_versions(prompt_id, from_, to)
+
+
+@router.get(
+    "/{prompt_id}/versions/{version_number}",
+    response_model=PromptVersionRead,
+    summary="Get a specific version",
+)
+async def get_version(
+    prompt_id: uuid.UUID, version_number: int, db: DbSession
+) -> PromptVersionRead:
+    version = await PromptService(db).get_version(prompt_id, version_number)
+    return PromptVersionRead.model_validate(version)
+
+
+# --- Assets -----------------------------------------------------------------
+@router.get(
+    "/{prompt_id}/assets",
+    response_model=list[AssetRead],
+    summary="List a prompt's preview assets",
+)
+async def list_assets(prompt_id: uuid.UUID, db: DbSession) -> list[AssetRead]:
+    assets = await PromptService(db).list_assets(prompt_id)
+    return [AssetRead.model_validate(a) for a in assets]
+
+
+@router.post(
+    "/{prompt_id}/assets",
+    response_model=AssetRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Attach a preview asset (owner/moderator)",
+)
+async def add_asset(
+    prompt_id: uuid.UUID, data: AssetCreate, db: DbSession, user: CurrentUser
+) -> AssetRead:
+    asset = await PromptService(db).add_asset(prompt_id, data, user)
+    return AssetRead.model_validate(asset)
+
+
+@router.delete(
+    "/{prompt_id}/assets/{asset_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a preview asset (owner/moderator)",
+)
+async def delete_asset(
+    prompt_id: uuid.UUID, asset_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> None:
+    await PromptService(db).delete_asset(prompt_id, asset_id, user)
