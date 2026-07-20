@@ -25,6 +25,11 @@ TREE: list[tuple[str, list[str]]] = [
     ("Database", ["Schema Design", "Query Performance", "Migrations"]),
     ("DevOps", ["Docker", "CI/CD"]),
     ("Testing", []),
+    # For everyday / non-developer users — AI image & photo-editing prompts.
+    (
+        "Creative & Media",
+        ["AI Image Prompts", "Photo Editing", "Portraits & Avatars", "Social Media"],
+    ),
 ]
 
 # Assign a prompt to a (leaf) category when a keyword matches its title.
