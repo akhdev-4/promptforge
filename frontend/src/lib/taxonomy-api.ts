@@ -8,6 +8,7 @@ export const categoriesApi = {
   list: () => apiFetch<Category[]>("/categories", { auth: false }),
   create: (data: { name: string; parent_id?: string | null; description?: string }) =>
     apiFetch<Category>("/categories", { method: "POST", body: data }),
+  remove: (id: string) => apiFetch<void>(`/categories/${id}`, { method: "DELETE" }),
 };
 
 export const tagsApi = {
