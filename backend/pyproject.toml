@@ -5,8 +5,8 @@ description = "PromptForge — production-tested AI prompt knowledge platform (F
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
+    # [standard] pulls in the fastapi-cli runner FastAPI Cloud uses to start the app.
+    "fastapi[standard]>=0.115.0",
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
     "asyncpg>=0.30.0",
@@ -30,6 +30,11 @@ dev = [
     "ruff>=0.7.0",
     "mypy>=1.13.0",
 ]
+
+# Tell FastAPI Cloud / `fastapi run` exactly which app to start (no auto-discovery).
+# Resolved relative to the app directory (backend/), where the `app` package lives.
+[tool.fastapi]
+entrypoint = "app.main:app"
 
 [tool.ruff]
 line-length = 120
