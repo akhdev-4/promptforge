@@ -19,6 +19,10 @@ if settings.is_sqlite:
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
     _engine_kwargs.update(pool_size=10, max_overflow=20, pool_pre_ping=True)
+    # Managed Postgres (Neon/Supabase) requires TLS; asyncpg takes it here since
+    # the libpq-style sslmode query param is stripped from the URL.
+    if settings.db_requires_ssl:
+        _engine_kwargs["connect_args"] = {"ssl": True}
 
 engine = create_async_engine(settings.sqlalchemy_database_uri, **_engine_kwargs)
 

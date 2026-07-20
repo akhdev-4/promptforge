@@ -1,0 +1,12 @@
+# Keep the FastAPI Cloud upload lean.
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.env
+.env.local
+tests/

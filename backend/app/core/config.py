@@ -69,13 +69,34 @@ class Settings(BaseSettings):
 
     @property
     def sqlalchemy_database_uri(self) -> str:
-        if self.DATABASE_URL:
-            return self.DATABASE_URL
-        return f"sqlite+aiosqlite:///{self.SQLITE_PATH}"
+        """Resolved DB URL, normalized for the async driver.
+
+        Managed Postgres providers (Neon, Supabase, Railway) hand out URLs like
+        ``postgres://…?sslmode=require``. We normalize the scheme to
+        ``postgresql+asyncpg://`` and strip libpq-only query params that asyncpg
+        can't parse (SSL is applied via connect_args — see ``db_requires_ssl``).
+        """
+        url = self.DATABASE_URL
+        if not url:
+            return f"sqlite+aiosqlite:///{self.SQLITE_PATH}"
+
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url.split("://", 1)[1]
+        if url.startswith("postgresql://"):
+            url = "postgresql+asyncpg://" + url.split("://", 1)[1]
+        if "+asyncpg://" in url and "?" in url:
+            url = url.split("?", 1)[0]
+        return url
 
     @property
     def is_sqlite(self) -> bool:
         return self.sqlalchemy_database_uri.startswith("sqlite")
+
+    @property
+    def db_requires_ssl(self) -> bool:
+        """True when the source URL asked for TLS (e.g. Neon's sslmode=require)."""
+        raw = (self.DATABASE_URL or "").lower()
+        return "sslmode=require" in raw or "ssl=true" in raw
 
 
 @lru_cache
