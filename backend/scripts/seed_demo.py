@@ -883,11 +883,434 @@ Passkey management (rename/revoke) in account settings.
 """
 
 
+# ---------------------------------------------------------------------------
+# Re-scoped content: the login prompts are FRONTEND (client-side) in scope —
+# visuals, component structure, client validation, states, and the API
+# *contract* they call. Server internals (hashing, token rotation, sessions,
+# RLS, rate-limiting) live in the Backend prompts. These reassignments override
+# the verbose full-stack versions above for the prompt list built below.
+# ---------------------------------------------------------------------------
+GLASS = """# Modern Glassmorphism Login — React (Frontend)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build a complete, accessible login
+**screen component** in React. Scope is the client: visuals, structure,
+validation, states, and the API contract it calls — not the server. Ship every
+file, fully typed.
+
+## 2. Tech stack (exact)
+- React 18 + TypeScript (strict), Vite, **Tailwind CSS 3.4** (no UI kit)
+- **react-hook-form 7** + **zod 3** (client validation)
+- **@tanstack/react-query 5** for the login mutation
+
+## 3. Visual / design spec (glassmorphism)
+- Full-viewport animated gradient (135deg `#6d28d9 → #2563eb → #0891b2`, 12s loop)
+- Frosted card: max-w 360px, radius 20px, `rgba(255,255,255,.12)` + `backdrop-blur(16px)`,
+  1px translucent border, soft shadow
+- Inputs 44px / radius 10px translucent; white primary button (`#4c1d95` text)
+- Honour `prefers-reduced-motion`
+
+## 4. Component structure
+`<LoginScreen>` → `<LoginForm>` (email, password with show/hide toggle, remember-me,
+forgot link, submit, error region, social divider). Keep small presentational
+pieces: `PasswordInput`, `FieldError`.
+
+## 5. Client validation (zod)
+email required + valid + lowercased; password required, min 8; validate on blur +
+submit; inline errors wired via `aria-describedby`; disable submit while invalid/pending.
+
+## 6. States & UX
+loading (spinner + disabled, block double-submit); `aria-live` error banner for
+"incorrect email or password"; password show/hide with `aria-pressed`; on success
+redirect to `/dashboard`.
+
+## 7. API contract (client-side only — the login API is a separate Backend prompt)
+- Call `POST /api/auth/login { email, password }` via the mutation.
+- Expect `{ accessToken, user }`; keep the access token **in memory** (context),
+  assume the refresh token is an httpOnly cookie the server set.
+- On `401` show the credentials error. (Refresh/rotation is the API's job.)
+Expose a thin `useLogin()` hook wrapping the mutation + redirect.
+
+## 8. Accessibility (WCAG 2.1 AA)
+Labelled inputs; visible focus rings; `aria-live` errors; full keyboard; `Enter`
+submits; contrast ≥ 4.5:1 on the translucent surface.
+
+## 9. Testing (React Testing Library + MSW)
+render; validation; submit success → redirect; `401` → error; password toggle;
+keyboard submit.
+
+## 10. File structure
+`src/features/auth/{LoginScreen,LoginForm,PasswordInput}.tsx`,
+`hooks/useLogin.ts`, `schemas/loginSchema.ts`, `__tests__/…`
+
+## 11. Acceptance criteria
+- [ ] Frosted card over animated gradient; responsive + reduced-motion aware
+- [ ] Zod validation with accessible inline + `aria-live` errors
+- [ ] Calls the login endpoint; access token kept in memory (not web storage)
+- [ ] Loading / disabled / success states correct; keyboard + SR friendly
+- [ ] Component tests pass; no `any`
+
+## Out of scope (see the Backend prompts)
+Password hashing, token issuance/rotation, sessions, rate-limiting.
+"""
+
+APPLE = """# Apple-Style Minimal Login — Next.js (Frontend)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build a minimal, Apple-ID-style login
+**screen** in Next.js (App Router) + TS. Client-focused: visuals, the credentials
++ social UI, and the auth calls via the client SDK. Ship all files, typed.
+
+## 2. Tech stack (exact)
+Next.js 14+ App Router, TypeScript, Tailwind 3.4, react-hook-form + zod, and the
+**NextAuth client** (`signIn`). Provider/secret config is a Backend/config prompt.
+
+## 3. Visual / design spec
+Off-white `#f5f5f7`; centered column max-w 360px; SF-like system font; 12px-radius
+inputs; single blue primary (`#0071e3`); outlined social buttons; thin "or"
+divider; tasteful motion; reduced-motion aware.
+
+## 4. Structure & behaviour
+`<LoginForm>`: email + password → `signIn('credentials')`; "Continue with Apple/
+Google" → `signIn('apple' | 'google')`. Loading spinner on the pressed button;
+inline `OAuthAccountNotLinked` message; redirect to `callbackUrl`/`/dashboard`.
+
+## 5. Client validation (zod)
+email valid + required; password min 8; disabled while pending; `aria-live` errors.
+
+## 6. API contract (client-side)
+Uses NextAuth `signIn(...)`; on error render the friendly message; on success let
+NextAuth handle the redirect. (Providers, secrets, session strategy = Backend/config prompt.)
+
+## 7. Accessibility (WCAG 2.1 AA)
+Real `<button>`s + `aria-label`; labelled inputs; visible focus; contrast ≥ 4.5:1;
+keyboard-first; announce errors.
+
+## 8. Testing (RTL + Playwright)
+credentials happy path; bad password; social buttons call `signIn`; error render.
+
+## 9. File structure
+`app/(auth)/login/page.tsx`, `components/auth/{LoginForm,SocialButtons}.tsx`,
+`lib/validation/login.ts`
+
+## 10. Acceptance criteria
+- [ ] Minimal centered layout; blue CTA; social buttons; "or" divider
+- [ ] Credentials + social via `signIn`; friendly `OAuthAccountNotLinked` message
+- [ ] Client validation + `aria-live` errors; keyboard + a11y ≥ 95
+- [ ] Component / E2E tests pass
+
+## Out of scope (Backend/config prompt)
+Provider + secret config, session strategy, callback validation.
+"""
+
+DARK2FA = """# Dark SaaS Login with 2FA — React (Frontend)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build the **two-step login UI** (password
+→ 6-digit TOTP) for a dark SaaS app. Client-focused: the flow, the OTP input, and
+states. Ship all files, typed + tested.
+
+## 2. Tech stack (exact)
+React 18 + TS, Vite, Tailwind 3.4, react-hook-form + zod, TanStack Query.
+
+## 3. Visual / design spec
+Navy `#0b0f19` bg; `#111827` card; violet→indigo gradient CTA; muted labels;
+Linear/Vercel feel; a step indicator (1 Credentials · 2 Verify); six auto-advancing
+OTP boxes.
+
+## 4. Flow (client)
+Step 1: email + password → `POST /api/auth/login`. If the response is
+`{ status: 'mfa_required', mfaToken }` → go to step 2. Step 2: 6-digit code →
+`POST /api/auth/2fa/verify { mfaToken, code }` → redirect. "Use a backup code"
+swaps to a single input. Reflect a server lockout as a cooldown timer.
+
+## 5. OTP input component
+6 single-digit boxes: auto-focus next, backspace to previous, **paste fills all**,
+digits only, `autocomplete="one-time-code"`, `role="group"` + `aria-label`.
+
+## 6. States & a11y
+reducer step state (`credentials | mfa | locked`); `aria-live` verify errors;
+visible focus; full keyboard + paste; step indicator announced.
+
+## 7. API contract (client-side)
+Submits credentials, then the 6-digit code. Never handles secrets — TOTP
+verification + lockout enforcement are the API's job.
+
+## 8. Testing
+OTP input (auto-advance, paste, digit-only), reducer transitions, two-step happy
+path, wrong code, lockout render.
+
+## 9. File structure
+`src/features/auth/{LoginStepCredentials,LoginStepMfa,OtpInput}.tsx`,
+`state/loginReducer.ts`, `hooks/useLogin.ts`
+
+## 10. Acceptance criteria
+- [ ] Two-step UI; transitions on `mfa_required`
+- [ ] OTP boxes auto-advance + accept a pasted 6-digit code
+- [ ] Backup-code toggle; lockout cooldown reflected
+- [ ] Keyboard + SR complete the flow; tests pass
+
+## Out of scope (Backend prompt)
+TOTP secret + verification, `mfaToken` issuance, server-side lockout.
+"""
+
+MAGIC = """# Passwordless Magic-Link Login — Next.js (Frontend)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build the **request + confirmation UI** for
+passwordless magic-link sign-in. Client-focused. Ship files, typed + tested.
+
+## 2. Tech stack (exact)
+Next.js 14+ App Router, TS, Tailwind 3.4, react-hook-form + zod.
+
+## 3. Visual / design spec
+Soft `#eef2ff → #e0f2fe` gradient; white card radius 18px; one email field +
+"Send magic link"; after submit, swap to a "Check your inbox" state.
+
+## 4. Flow (client)
+Submit email → `POST /api/auth/magic-link { email }` → always show the same neutral
+"check your inbox" confirmation with a **masked** email (`j•••@acme.com`) and a
+**Resend** button (30s cooldown). No password field. When routed back with an
+error, show an "expired link" recovery view.
+
+## 5. Validation & states
+zod email; disabled while sending; `aria-live` status; cooldown timer; masked email;
+expired-link recovery view.
+
+## 6. API contract (client-side)
+POST the email; treat all responses identically (no enumeration in the UI). Token
+signing/verification/rate-limit are the API's concern.
+
+## 7. Accessibility
+Labelled input; status announced; visible focus; keyboard-first.
+
+## 8. Testing
+submit → confirmation; email masking; resend cooldown; expired-link view.
+
+## 9. File structure
+`app/(auth)/login/page.tsx`, `app/(auth)/login/sent/page.tsx`,
+`components/auth/MagicLinkForm.tsx`
+
+## 10. Acceptance criteria
+- [ ] One email field; neutral "check your inbox" with a masked email
+- [ ] Rate-limited resend with a visible cooldown
+- [ ] Expired-link recovery screen; no password anywhere
+- [ ] a11y ≥ 95; tests pass
+
+## Out of scope (Backend prompt)
+Token signing / single-use jti, email delivery, rate-limiting.
+"""
+
+STRIPE = """# Stripe-Style Split-Screen Login — UI (Frontend / Templates)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build the **split-screen login UI**: a
+marketing panel + a login form, server-rendered with Django templates. Focus on
+markup, styling, responsiveness, and form UX. Ship the template + styles; it must
+work **without JavaScript**.
+
+## 2. Visual / design spec
+Left pane: gradient marketing panel (`#635bff`) with a headline + rotating
+testimonial. Right pane: the form card. Collapses to one column below 768px.
+
+## 3. Form UI
+email + password + remember-me; a `{% csrf_token %}` field; a **non-field error
+banner** slot ("Incorrect email or password"); primary `#635bff` button.
+
+## 4. Behaviour (client)
+Standard form POST to the login route; render the server-provided error banner;
+"remember me" is a checkbox the server reads. No client-side auth logic.
+
+## 5. Accessibility (WCAG 2.1 AA)
+Labelled inputs; an error summary linked to fields; visible focus; contrast ≥ 4.5:1;
+fully operable and submittable **without JavaScript**.
+
+## 6. Deliverables
+`login.html` + `base.html` + the CSS, plus a short note on where the form posts and
+which context variables it expects (`form`, `next`, error flags).
+
+## 7. Acceptance criteria
+- [ ] Responsive two-pane → single column
+- [ ] Accessible form with a non-field error slot; CSRF field present
+- [ ] Works without JavaScript; contrast + focus correct
+
+## Out of scope (Backend prompt)
+The Django view/auth, session + cookie settings, CSRF/rate-limit handling.
+"""
+
+PASSKEY = """# Passkey (WebAuthn) Login — Neobrutalist, React (Frontend)
+
+## 1. Role & objective
+You are a **senior frontend engineer**. Build the **client WebAuthn login UI** with
+a graceful fallback. The ceremony runs in the browser; the server endpoints are a
+contract. Ship the client + tests, typed.
+
+## 2. Tech stack (exact)
+React 18 + TS, Vite, Tailwind 3.4, **@simplewebauthn/browser**.
+
+## 3. Visual / design spec (neobrutalism)
+`#fde68a` bg; white card with a **3px black border** and a hard **8px offset
+shadow**; a chunky black "🔑 Sign in with a passkey" button (yellow text);
+high-contrast blocks.
+
+## 4. Client ceremony (WebAuthn)
+1. `GET /api/webauthn/authenticate/options?email=` → options.
+2. `startAuthentication(options)` (browser prompts biometric) → assertion.
+3. `POST /api/webauthn/authenticate/verify` → on success, redirect.
+"Register a passkey" runs `startRegistration()` against the register endpoints.
+
+## 5. Capability detection & fallback
+On mount detect support (`PublicKeyCredential` +
+`isUserVerifyingPlatformAuthenticatorAvailable()`); if unsupported → route to a
+magic-link fallback with a short explanation. Handle `NotAllowedError` (user
+cancel) quietly.
+
+## 6. API contract (client-side)
+Fetch options + submit the assertion only. Challenge generation and origin / RP-ID
+/ signature-counter verification are the API's concern.
+
+## 7. Accessibility
+Real `<button>` + `aria-label`; `aria-live` status; visible focus; the biometric
+hint is text, not icon-only.
+
+## 8. Testing (mock the WebAuthn API)
+support vs unsupported render; start/verify flow; cancel handling; fallback route.
+
+## 9. File structure
+`src/features/auth/{PasskeyLogin,MagicLinkFallback}.tsx`,
+`lib/{webauthnClient,capabilities}.ts`, `hooks/usePasskeyLogin.ts`
+
+## 10. Acceptance criteria
+- [ ] Primary action runs the WebAuthn assertion + redirects on success
+- [ ] First-time passkey registration works
+- [ ] No authenticator → magic-link fallback; cancel handled quietly
+- [ ] Tests pass; no passwords anywhere
+
+## Out of scope (Backend prompt)
+Challenge issuance, origin/RP-ID/counter verification, credential storage.
+"""
+
+
+# --- UI / Design prompts (visual & UX; framework-agnostic) -----------------
+UI_DS = """# Glassmorphism Auth — Visual Design System & Tokens
+
+## 1. Role & objective
+You are a **product/UI designer + design engineer**. Define the **visual design
+system** for a glassmorphism authentication surface — tokens and a spec, **not** a
+full app. Framework-agnostic: any stack can implement it.
+
+## 2. Deliverables
+1. A **design-token set** — CSS custom properties **and** a JSON theme — for color,
+   surface, blur, radius, spacing, shadow, typography, and motion.
+2. An annotated **single-screen visual spec** for the login card.
+3. **Light + dark** variants.
+
+## 3. Color & surface
+- Backdrop: animated gradient (violet `#6d28d9` → blue `#2563eb` → cyan `#0891b2`).
+- Glass surface: `rgba(255,255,255,.12)`, `backdrop-blur(16px) saturate(140%)`,
+  1px border `rgba(255,255,255,.25)`, shadow `0 24px 60px rgba(0,0,0,.35)`.
+- Document the **safe text colors** that keep ≥ 4.5:1 on the translucent surface.
+
+## 4. Type & spacing
+A type scale (12/14/16/22px) with weights + letter-spacing; an 8px spacing grid;
+radii 10/16/20px. Deliver **tokens**, not prose.
+
+## 5. States & motion
+Tokens for hover / focus / active / disabled / error; a focus-ring token; a
+reduced-motion rule; gradient + press-scale motion durations.
+
+## 6. Accessibility
+WCAG 2.1 AA contrast on the translucent surface (list the tested pairs); visible
+focus; motion-safe defaults.
+
+## 7. Acceptance criteria
+- [ ] Token set (CSS vars + JSON) for color/surface/blur/radius/space/type/motion
+- [ ] Light + dark variants that both pass contrast
+- [ ] Annotated single-screen spec; focus + reduced-motion defined
+- [ ] Framework-agnostic — no component code required
+
+## Out of scope
+The React/Vue/etc. implementation — that's a Frontend prompt.
+"""
+
+UI_LAYOUT = """# Authentication Screens — Layout & UX Patterns
+
+## 1. Role & objective
+You are a **UX/product designer**. Produce a **pattern guide** for authentication
+screens (sign-in, sign-up, reset, verify): layout, flows, states, and microcopy.
+Framework-agnostic — the output is design guidance + wireframe specs.
+
+## 2. Layouts (specify each)
+Centered card vs **split-screen** (marketing + form) vs full-bleed; when to use
+each; responsive behaviour (breakpoints, single-column collapse < 768px); a safe
+content width (~360–420px form column).
+
+## 3. Flows & states
+For each screen define default, focus, loading, success, and **every error** state
+(invalid field, wrong credentials, rate-limited, expired link), plus empty/first-run
+states. Include a simple flow diagram of the happy path + recovery paths.
+
+## 4. Microcopy
+Button labels ("Sign in", "Send reset link"), error messages (explain + fix, no
+blame), and neutral security copy (no user enumeration). Deliver a **copy table**.
+
+## 5. Accessibility & inclusivity
+Form labelling, the error-summary pattern, focus order, password-manager/autofill
+friendliness, reduced-motion, and RTL notes.
+
+## 6. Acceptance criteria
+- [ ] Layout patterns with when-to-use + responsive rules
+- [ ] A full state matrix per screen incl. error/empty/loading
+- [ ] A microcopy table (labels + errors) that's clear and non-enumerating
+- [ ] A11y + RTL guidance; a simple flow diagram
+
+## Out of scope
+Visual theme/tokens (see the design-system prompt) and implementation code.
+"""
+
+UI_MOTION = """# Login Micro-interactions & Motion Spec
+
+## 1. Role & objective
+You are a **motion/interaction designer**. Specify the **micro-interactions** for a
+login screen so any engineer implements them consistently. Framework-agnostic
+motion spec (timings, easings, states) + a small self-contained CSS reference.
+
+## 2. Interactions to define
+- Card entrance (fade + rise) — timing + easing.
+- Input focus (border/ring transition) + label behaviour.
+- Password show/hide toggle transition.
+- Button: hover, **press (scale)**, loading (spinner), success (checkmark).
+- Error: shake vs fade-in of an `aria-live` banner (make the accessible choice).
+- Success → redirect transition.
+
+## 3. Timing system
+A duration scale (e.g. 120/200/320ms) + easing tokens (standard, decelerate,
+spring-ish) and which interaction uses which. **No magic numbers.**
+
+## 4. Accessibility
+**prefers-reduced-motion**: define the reduced variant for every interaction (no
+shake, instant state changes). Never rely on motion alone to convey state.
+
+## 5. Deliverables
+A motion spec table (interaction → property, duration, easing, reduced-motion
+fallback) + a small self-contained CSS reference demonstrating the key ones.
+
+## 6. Acceptance criteria
+- [ ] Every listed interaction has duration + easing + reduced-motion fallback
+- [ ] A consistent timing/easing token system (no magic numbers)
+- [ ] Accessible error signalling (not motion-only)
+- [ ] The CSS reference matches the spec
+
+## Out of scope
+Full component build (Frontend prompt) and visual tokens (design-system prompt).
+"""
+
+
 PROMPTS: list[dict] = [
     {
         "title": "Modern Glassmorphism Login — React + JWT",
         "description": "Frosted-glass login over an animated gradient with in-memory JWT + httpOnly refresh, Zod validation, and full WCAG AA a11y.",
-        "prompt_type": "ui", "complexity": "advanced",
+        "prompt_type": "frontend", "complexity": "advanced",
         "framework": "React", "language": "TypeScript", "ai_model": "claude-opus-4-8",
         "estimated_tokens": 1500,
         "tags": ["login", "glassmorphism", "jwt", "react", "tailwind"],
@@ -903,7 +1326,7 @@ PROMPTS: list[dict] = [
     {
         "title": "Apple-Style Minimal Login — OAuth (Google & Apple)",
         "description": "Minimal Apple-ID-style Next.js sign-in with credentials + Google/Apple OAuth via Auth.js, secure sessions, and open-redirect-safe callbacks.",
-        "prompt_type": "ui", "complexity": "intermediate",
+        "prompt_type": "frontend", "complexity": "intermediate",
         "framework": "Next.js", "language": "TypeScript", "ai_model": "claude-opus-4-8",
         "estimated_tokens": 1300,
         "tags": ["login", "oauth", "minimal", "nextjs", "social-auth"],
@@ -919,7 +1342,7 @@ PROMPTS: list[dict] = [
     {
         "title": "Dark SaaS Login with Two-Factor (TOTP)",
         "description": "Two-step dark login (password → 6-digit TOTP) with auto-advancing OTP boxes, paste support, backup codes, and a 5-attempt lockout.",
-        "prompt_type": "ui", "complexity": "advanced",
+        "prompt_type": "frontend", "complexity": "advanced",
         "framework": "React", "language": "TypeScript", "ai_model": "claude-opus-4-8",
         "estimated_tokens": 1400,
         "tags": ["login", "2fa", "totp", "dark-mode", "security"],
@@ -935,7 +1358,7 @@ PROMPTS: list[dict] = [
     {
         "title": "Passwordless Magic-Link Login",
         "description": "End-to-end passwordless email magic-link auth: single-use 15-min JWT (jti), no user enumeration, rate-limited resend, and an inlined email template.",
-        "prompt_type": "ui", "complexity": "intermediate",
+        "prompt_type": "frontend", "complexity": "intermediate",
         "framework": "Next.js", "language": "TypeScript", "ai_model": "claude-sonnet-5",
         "estimated_tokens": 1300,
         "tags": ["login", "passwordless", "magic-link", "email", "nextjs"],
@@ -951,7 +1374,7 @@ PROMPTS: list[dict] = [
     {
         "title": "Stripe-Style Split-Screen Login (Server Sessions)",
         "description": "Server-rendered Django split-screen login with session auth, CSRF, safe `next` redirects, rate-limiting, and full no-JavaScript support.",
-        "prompt_type": "ui", "complexity": "intermediate",
+        "prompt_type": "frontend", "complexity": "intermediate",
         "framework": "Django", "language": "Python", "ai_model": "claude-opus-4-8",
         "estimated_tokens": 1200,
         "tags": ["login", "split-screen", "sessions", "django", "csrf"],
@@ -967,7 +1390,7 @@ PROMPTS: list[dict] = [
     {
         "title": "Passkey (WebAuthn) Login — Neobrutalist",
         "description": "Passwordless passkey/WebAuthn login (SimpleWebAuthn) with capability detection, magic-link fallback, origin/RP-ID + counter verification, and quiet cancel handling.",
-        "prompt_type": "ui", "complexity": "expert",
+        "prompt_type": "frontend", "complexity": "expert",
         "framework": "React", "language": "TypeScript", "ai_model": "claude-opus-4-8",
         "estimated_tokens": 1500,
         "tags": ["login", "passkeys", "webauthn", "neobrutalism", "passwordless"],
@@ -1507,6 +1930,52 @@ PROMPTS += [
             "sargable query rewrites (no functions on indexed columns, explicit columns), and "
             "before/after plans showing ~1.2 s → < 10 ms — plus a reusable measure→index→rewrite→"
             "verify playbook and partitioning notes."
+        ),
+    },
+]
+
+
+PROMPTS += [
+    {
+        "title": "Glassmorphism Auth — Visual Design System & Tokens",
+        "description": "A framework-agnostic design-token set (CSS vars + JSON) and annotated visual spec for a glassmorphism auth surface, with light/dark variants that pass contrast.",
+        "prompt_type": "ui", "complexity": "intermediate",
+        "framework": None, "language": None, "ai_model": "claude-opus-4-8",
+        "estimated_tokens": 900, "tags": ["design-system", "tokens", "glassmorphism", "ui", "accessibility"],
+        "theme": "glass", "content": UI_DS,
+        "expected_output": (
+            "A design-token set (CSS custom properties + a JSON theme) covering color, glass "
+            "surface/blur, radius, spacing, shadow, typography, and motion, plus an annotated "
+            "single-screen spec for the login card — with light and dark variants that both meet "
+            "WCAG AA contrast and a defined focus ring + reduced-motion rule. No framework code."
+        ),
+    },
+    {
+        "title": "Authentication Screens — Layout & UX Patterns",
+        "description": "A framework-agnostic pattern guide for sign-in/up/reset/verify: layouts, a full state matrix (error/empty/loading), non-enumerating microcopy, and a11y/RTL guidance.",
+        "prompt_type": "ui", "complexity": "intermediate",
+        "framework": None, "language": None, "ai_model": "claude-opus-4-8",
+        "estimated_tokens": 900, "tags": ["ux", "layout", "patterns", "microcopy", "ui"],
+        "theme": "apple", "content": UI_LAYOUT,
+        "expected_output": (
+            "A UX pattern guide for auth screens: when to use centered vs split-screen vs full-bleed "
+            "layouts with responsive rules, a per-screen state matrix (default/focus/loading/success "
+            "and every error + empty state), a clear non-enumerating microcopy table, a11y + RTL "
+            "notes, and a simple happy-path/recovery flow diagram — no visual theme or code."
+        ),
+    },
+    {
+        "title": "Login Micro-interactions & Motion Spec",
+        "description": "A framework-agnostic motion spec for a login screen: a duration/easing token system, per-interaction timings, accessible error signalling, and reduced-motion fallbacks + a CSS reference.",
+        "prompt_type": "ui", "complexity": "intermediate",
+        "framework": None, "language": None, "ai_model": "claude-sonnet-5",
+        "estimated_tokens": 850, "tags": ["motion", "micro-interactions", "animation", "accessibility", "ui"],
+        "theme": "dark2fa", "content": UI_MOTION,
+        "expected_output": (
+            "A motion spec table mapping each login micro-interaction (card entrance, input focus, "
+            "password toggle, button press/loading/success, error banner, redirect) to a property, "
+            "duration, and easing from a small consistent token system — with a prefers-reduced-motion "
+            "fallback for every one and a self-contained CSS reference implementing the key ones."
         ),
     },
 ]

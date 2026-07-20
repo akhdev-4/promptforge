@@ -7,6 +7,7 @@ import enum
 
 class PromptType(str, enum.Enum):
     UI = "ui"
+    FRONTEND = "frontend"
     BACKEND = "backend"
     DATABASE = "database"
     API = "api"

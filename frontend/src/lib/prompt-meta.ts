@@ -3,7 +3,8 @@
 import type { Complexity, PromptStatus, PromptType } from "@/types";
 
 export const promptTypeLabels: Record<PromptType, string> = {
-  ui: "UI",
+  ui: "UI / Design",
+  frontend: "Frontend",
   backend: "Backend",
   database: "Database",
   api: "API",

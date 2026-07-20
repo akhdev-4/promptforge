@@ -42,6 +42,7 @@ export interface ApiErrorBody {
 // --- Prompts ----------------------------------------------------------------
 export type PromptType =
   | "ui"
+  | "frontend"
   | "backend"
   | "database"
   | "api"

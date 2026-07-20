@@ -30,6 +30,9 @@ TREE: list[tuple[str, list[str]]] = [
 # Assign a prompt to a (leaf) category when a keyword matches its title.
 # First match wins; ordered most-specific first.
 RULES: list[tuple[str, str]] = [
+    ("Design System", "Design Systems"),
+    ("Layout & UX", "Design Systems"),
+    ("Micro-interactions", "Design Systems"),
     ("Login", "Authentication UI"),
     ("REST API", "APIs"),
     ("JWT Authentication", "Authentication & Security"),
