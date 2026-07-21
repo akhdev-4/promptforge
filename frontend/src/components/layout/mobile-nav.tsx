@@ -3,14 +3,25 @@
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
+import { createPortal } from "react-dom";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 
-/** Hamburger + slide-in drawer that reuses the Sidebar. Shown below `lg`. */
+/**
+ * Hamburger + slide-in drawer that reuses the Sidebar. Shown below `lg`.
+ *
+ * The overlay is portalled to <body> on purpose: the Topbar uses `backdrop-blur`
+ * (backdrop-filter), which establishes a containing block for fixed-positioned
+ * descendants — so a `fixed inset-0` rendered inside the Topbar would be sized to
+ * the 64px header instead of the viewport. Portalling escapes that.
+ */
 export function MobileNav() {
   const [open, setOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
   const pathname = usePathname();
+
+  React.useEffect(() => setMounted(true), []);
 
   // Close on navigation.
   React.useEffect(() => {
@@ -42,27 +53,26 @@ export function MobileNav() {
         <Menu className="h-5 w-5" />
       </Button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 w-64 max-w-[82%] bg-background shadow-2xl">
-            {/* Solid bg so the sidebar's translucent surface reads clearly in the drawer. */}
-            <Sidebar className="h-full border-r-0 bg-card backdrop-blur-none" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-3.5"
-              onClick={() => setOpen(false)}
-              aria-label="Close navigation"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      )}
+      {mounted &&
+        open &&
+        createPortal(
+          <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
+            <div className="absolute inset-y-0 left-0 w-72 max-w-[84%] bg-background shadow-2xl">
+              <Sidebar className="h-full border-r-0 bg-card backdrop-blur-none" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-3.5"
+                onClick={() => setOpen(false)}
+                aria-label="Close navigation"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
