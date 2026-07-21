@@ -14,7 +14,9 @@ export default function FavoritesPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Favorites</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Prompts you&apos;ve bookmarked for quick access.
+          Prompts you&apos;ve saved for quick access. Open any prompt and use the
+          <span className="mx-1 font-medium text-foreground">Save to Favorites</span>
+          (bookmark) button.
         </p>
       </div>
 
@@ -35,7 +37,8 @@ export default function FavoritesPage() {
           <Bookmark className="h-10 w-10 text-muted-foreground/40" />
           <p className="mt-3 font-medium">No favorites yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Bookmark prompts with the “Save” button to find them here.
+            Open a prompt and click <span className="font-medium">Save to Favorites</span>{" "}
+            (the bookmark icon) — not the heart, which is a public like.
           </p>
         </div>
       )}

@@ -193,6 +193,8 @@ export default function PromptDetailPage() {
                 onClick={() => like.mutate()}
                 disabled={like.isPending}
                 aria-pressed={prompt.is_liked}
+                aria-label={prompt.is_liked ? "Unlike" : "Like"}
+                title={prompt.is_liked ? "Unlike" : "Like this prompt"}
               >
                 <Heart
                   className={cn(
@@ -207,6 +209,14 @@ export default function PromptDetailPage() {
                 onClick={() => bookmark.mutate()}
                 disabled={bookmark.isPending}
                 aria-pressed={prompt.is_bookmarked}
+                aria-label={
+                  prompt.is_bookmarked ? "Remove from Favorites" : "Save to Favorites"
+                }
+                title={
+                  prompt.is_bookmarked
+                    ? "Remove from your Favorites"
+                    : "Save to your Favorites"
+                }
               >
                 <Bookmark
                   className={cn(
@@ -214,7 +224,7 @@ export default function PromptDetailPage() {
                     prompt.is_bookmarked && "fill-primary text-primary",
                   )}
                 />
-                {prompt.is_bookmarked ? "Saved" : "Save"}
+                {prompt.is_bookmarked ? "In Favorites" : "Save to Favorites"}
               </Button>
               <AddToCollection promptId={prompt.id} />
             </>
