@@ -12,8 +12,10 @@ from app.models.user import User
 from app.repositories.user import UserRepository
 from app.schemas.common import Page, PageParams
 from app.schemas.prompt import PromptSummary
+from app.schemas.recommendation import RecommendationItem
 from app.schemas.user import UserPublic, UserRead, UserUpdate
 from app.services.interaction import InteractionService
+from app.services.recommendation import RecommendationService
 
 router = APIRouter()
 
@@ -39,6 +41,23 @@ async def my_bookmarks(
         user.id, offset=params.offset, limit=params.limit
     )
     return Page.create([PromptSummary.model_validate(p) for p in items], total, params)
+
+
+@router.get(
+    "/me/recommendations",
+    response_model=list[RecommendationItem],
+    summary="Personalized prompt recommendations for the current user",
+)
+async def my_recommendations(
+    db: DbSession,
+    user: CurrentUser,
+    limit: int = Query(12, ge=1, le=30),
+) -> list[RecommendationItem]:
+    recs = await RecommendationService(db).for_user(user.id, limit=limit)
+    return [
+        RecommendationItem(reason=r.reason, prompt=PromptSummary.model_validate(r.prompt))
+        for r in recs
+    ]
 
 
 @router.patch("/me", response_model=UserRead, summary="Update the current user")

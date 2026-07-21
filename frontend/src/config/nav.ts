@@ -44,7 +44,7 @@ export const navSections: NavSection[] = [
     items: [
       { label: "Projects", href: "/projects", icon: FolderKanban },
       { label: "Components", href: "/components", icon: Blocks },
-      { label: "Recommendations", href: "/recommendations", icon: Sparkles, soon: true },
+      { label: "Recommendations", href: "/recommendations", icon: Sparkles },
     ],
   },
   {

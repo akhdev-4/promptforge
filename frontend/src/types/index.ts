@@ -177,6 +177,11 @@ export interface PromptSummary {
   updated_at: string;
 }
 
+export interface RecommendationItem {
+  reason: string;
+  prompt: PromptSummary;
+}
+
 export type AssetKind =
   | "screenshot"
   | "image"

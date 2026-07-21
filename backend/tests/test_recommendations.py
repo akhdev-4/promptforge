@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from tests.conftest import make_user
 
 PROMPTS = "/api/v1/prompts"
+RECS = "/api/v1/users/me/recommendations"
 
 
 async def _create(client: AsyncClient, headers: dict, **over) -> dict:
@@ -48,6 +49,42 @@ async def test_related_excludes_self_and_limits(client: AsyncClient) -> None:
     related = (await client.get(f"{PROMPTS}/{source['id']}/related", params={"limit": 3})).json()
     assert len(related) == 3
     assert all(p["id"] != source["id"] for p in related)
+
+
+@pytest.mark.asyncio
+async def test_feed_personalizes_from_bookmarks(client: AsyncClient) -> None:
+    _, author = await make_user(client)
+    # A prompt the reader will bookmark, and a strong match sharing its tags.
+    seed = await _create(client, author, title="Glass Login", tags=["auth", "login", "glass"])
+    match = await _create(client, author, title="Glass Signup", tags=["auth", "login", "glass"])
+    await _create(client, author, title="Unrelated", prompt_type="backend", tags=["ops"])
+
+    _, reader = await make_user(client)
+    resp = await client.post(f"{PROMPTS}/{seed['id']}/bookmark", headers=reader)
+    assert resp.status_code == 200, resp.text
+
+    recs = (await client.get(RECS, headers=reader)).json()
+    ids = [r["prompt"]["id"] for r in recs]
+    assert seed["id"] not in ids  # never recommends what you already bookmarked
+    assert match["id"] in ids
+    match_rec = next(r for r in recs if r["prompt"]["id"] == match["id"])
+    assert "Glass Login" in match_rec["reason"]
+
+
+@pytest.mark.asyncio
+async def test_feed_falls_back_to_trending_for_new_user(client: AsyncClient) -> None:
+    _, author = await make_user(client)
+    await _create(client, author, title="Popular", tags=["x"])
+
+    _, reader = await make_user(client)  # no bookmarks yet
+    recs = (await client.get(RECS, headers=reader)).json()
+    assert len(recs) >= 1
+    assert all(r["reason"] == "Popular right now" for r in recs)
+
+
+@pytest.mark.asyncio
+async def test_recommendations_require_auth(client: AsyncClient) -> None:
+    assert (await client.get(RECS)).status_code == 401
 
 
 @pytest.mark.asyncio

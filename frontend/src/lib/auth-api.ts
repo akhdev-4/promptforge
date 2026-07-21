@@ -1,7 +1,7 @@
 /** Auth-related API calls, thin wrappers over `apiFetch`. */
 
 import { apiFetch } from "@/lib/api";
-import type { TokenPair, User } from "@/types";
+import type { RecommendationItem, TokenPair, User } from "@/types";
 
 export interface RegisterInput {
   email: string;
@@ -30,4 +30,7 @@ export const authApi = {
 
   updateMe: (data: ProfileUpdateInput) =>
     apiFetch<User>("/users/me", { method: "PATCH", body: data }),
+
+  recommendations: (limit = 12) =>
+    apiFetch<RecommendationItem[]>(`/users/me/recommendations?limit=${limit}`),
 };
