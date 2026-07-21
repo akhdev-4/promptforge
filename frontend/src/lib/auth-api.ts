@@ -10,6 +10,13 @@ export interface RegisterInput {
   full_name?: string;
 }
 
+export interface ProfileUpdateInput {
+  full_name?: string | null;
+  username?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+}
+
 export const authApi = {
   register: (data: RegisterInput) =>
     apiFetch<User>("/auth/register", { method: "POST", body: data, auth: false }),
@@ -20,4 +27,7 @@ export const authApi = {
   },
 
   me: () => apiFetch<User>("/users/me"),
+
+  updateMe: (data: ProfileUpdateInput) =>
+    apiFetch<User>("/users/me", { method: "PATCH", body: data }),
 };

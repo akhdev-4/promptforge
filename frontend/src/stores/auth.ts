@@ -13,6 +13,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterInput) => Promise<void>;
   logout: () => void;
+  /** Replace the current user (e.g. after a profile update). */
+  setUser: (user: User) => void;
   /** Restore session on app load using a stored token. */
   hydrate: () => Promise<void>;
 }
@@ -20,6 +22,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   status: "idle",
+
+  setUser: (user) => set({ user }),
 
   login: async (email, password) => {
     const tokens = await authApi.login(email, password);

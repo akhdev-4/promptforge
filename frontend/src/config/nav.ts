@@ -51,7 +51,7 @@ export const navSections: NavSection[] = [
     title: "Insights",
     items: [
       { label: "Analytics", href: "/analytics", icon: BarChart3 },
-      { label: "Settings", href: "/settings", icon: Settings, soon: true },
+      { label: "Settings", href: "/settings", icon: Settings },
     ],
   },
 ];

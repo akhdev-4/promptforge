@@ -1,10 +1,10 @@
 "use client";
 
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, Settings as SettingsIcon, User as UserIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 
@@ -60,16 +60,26 @@ export function UserMenu() {
             </span>
           </div>
           <div className="p-1">
-            <button
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
               className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm",
                 "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
-              disabled
             >
               <UserIcon className="h-4 w-4" /> Profile
-              <span className="ml-auto text-[10px]">soon</span>
-            </button>
+            </Link>
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm",
+                "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              )}
+            >
+              <SettingsIcon className="h-4 w-4" /> Settings
+            </Link>
             <button
               onClick={handleLogout}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
