@@ -48,8 +48,9 @@ export function MobileNav() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-64 max-w-[82%] shadow-2xl">
-            <Sidebar className="h-full" />
+          <div className="absolute inset-y-0 left-0 w-64 max-w-[82%] bg-background shadow-2xl">
+            {/* Solid bg so the sidebar's translucent surface reads clearly in the drawer. */}
+            <Sidebar className="h-full border-r-0 bg-card backdrop-blur-none" />
             <Button
               variant="ghost"
               size="icon"
