@@ -9,25 +9,32 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 TokenType = Literal["access", "refresh"]
 
 
 # --- Passwords ---------------------------------------------------------------
+# We call ``bcrypt`` directly rather than through passlib: passlib is
+# unmaintained and couples to bcrypt's internals, which breaks whenever the
+# deployed bcrypt version drifts. bcrypt's own API is small and stable, and it
+# still produces/consumes standard ``$2b$`` hashes, so existing passwords stay
+# valid. bcrypt only uses the first 72 bytes and raises past that, so we
+# truncate the encoded password defensively.
 def hash_password(plain: str) -> str:
-    # bcrypt only considers the first 72 bytes; truncate defensively so longer
-    # passwords don't raise on some backends.
-    return _pwd_context.hash(plain[:72])
+    pw = plain.encode("utf-8")[:72]
+    return bcrypt.hashpw(pw, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return _pwd_context.verify(plain[:72], hashed)
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8")[:72], hashed.encode("utf-8"))
+    except ValueError:
+        # Malformed/legacy hash — treat as a non-match rather than 500.
+        return False
 
 
 # --- JWT ---------------------------------------------------------------------
