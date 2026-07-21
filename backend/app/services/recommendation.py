@@ -54,7 +54,10 @@ class RecommendationService:
         for seed in seeds:
             related = await self.provider.related(self.session, seed, limit=_PER_SEED)
             for rank, cand in enumerate(related):
-                if cand.id in seed_ids or cand.author_id == user_id:
+                # Skip only what they've already bookmarked — recommending a
+                # user's own proven prompts back to them is fine on a sharing
+                # platform (and keeps single-author demos from looking empty).
+                if cand.id in seed_ids:
                     continue
                 weight = float(_PER_SEED - rank)  # higher rank → higher weight
                 scores[cand.id] = scores.get(cand.id, 0.0) + weight
@@ -83,7 +86,7 @@ class RecommendationService:
             for p in trending:
                 if len(recs) >= limit:
                     break
-                if p.id in seen or p.author_id == user_id:
+                if p.id in seen:
                     continue
                 recs.append(Recommendation(prompt=p, reason="Popular right now"))
                 seen.add(p.id)
