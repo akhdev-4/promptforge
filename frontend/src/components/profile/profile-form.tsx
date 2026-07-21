@@ -24,7 +24,6 @@ const schema = z.object({
     .optional()
     .or(z.literal("")),
   bio: z.string().max(500).optional().or(z.literal("")),
-  avatar_url: z.url("Must be a URL").optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -45,7 +44,6 @@ export function ProfileForm() {
       full_name: user?.full_name ?? "",
       username: user?.username ?? "",
       bio: user?.bio ?? "",
-      avatar_url: user?.avatar_url ?? "",
     },
   });
 
@@ -57,7 +55,6 @@ export function ProfileForm() {
         full_name: values.full_name || null,
         username: values.username || null,
         bio: values.bio || null,
-        avatar_url: values.avatar_url || null,
       });
       setUser(updated);
       reset(values); // clears dirty state
@@ -87,14 +84,6 @@ export function ProfileForm() {
         <Label htmlFor="bio">Bio</Label>
         <Textarea id="bio" placeholder="A short line about you." {...register("bio")} />
         {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="avatar_url">Avatar URL</Label>
-        <Input id="avatar_url" placeholder="https://…/avatar.png" {...register("avatar_url")} />
-        {errors.avatar_url && (
-          <p className="text-xs text-destructive">{errors.avatar_url.message}</p>
-        )}
       </div>
 
       {serverError && (

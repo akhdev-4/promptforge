@@ -2,19 +2,12 @@
 
 import { BadgeCheck, Mail } from "lucide-react";
 
+import { AvatarEditor } from "@/components/profile/avatar-editor";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-
-function initials(name: string | null, email: string): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    return (parts[0]![0] + (parts[1]?.[0] ?? "")).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
-}
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
@@ -31,15 +24,8 @@ export default function ProfilePage() {
 
       {/* Identity header */}
       <Card>
-        <CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
-          <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-2xl font-semibold text-primary">
-            {user.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              initials(user.full_name, user.email)
-            )}
-          </span>
+        <CardContent className="flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:text-left">
+          <AvatarEditor />
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-2 sm:justify-start">
               <h2 className="text-lg font-semibold">
