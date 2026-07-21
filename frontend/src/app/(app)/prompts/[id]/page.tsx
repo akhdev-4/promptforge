@@ -195,6 +195,10 @@ export default function PromptDetailPage() {
                 aria-pressed={prompt.is_liked}
                 aria-label={prompt.is_liked ? "Unlike" : "Like"}
                 title={prompt.is_liked ? "Unlike" : "Like this prompt"}
+                className={cn(
+                  prompt.is_liked &&
+                    "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15",
+                )}
               >
                 <Heart
                   className={cn(
@@ -217,6 +221,10 @@ export default function PromptDetailPage() {
                     ? "Remove from your Favorites"
                     : "Save to your Favorites"
                 }
+                className={cn(
+                  prompt.is_bookmarked &&
+                    "border-primary bg-primary/10 text-primary hover:bg-primary/15",
+                )}
               >
                 <Bookmark
                   className={cn(

@@ -54,7 +54,9 @@ export const promptsApi = {
       { auth: false },
     ),
 
-  get: (id: string) => apiFetch<PromptDetail>(`/prompts/${id}`, { auth: false }),
+  // Authenticated when logged in (so is_bookmarked / is_liked reflect the
+  // current user), still works anonymously for public viewers.
+  get: (id: string) => apiFetch<PromptDetail>(`/prompts/${id}`),
 
   related: (id: string, limit = 6) =>
     apiFetch<PromptSummary[]>(`/prompts/${id}/related?limit=${limit}`, { auth: false }),
