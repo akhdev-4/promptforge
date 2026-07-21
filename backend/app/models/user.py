@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, String
+from sqlalchemy import Boolean, DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base_class import Base
@@ -59,7 +59,9 @@ class User(UUIDMixin, TimestampMixin, Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # --- Profile (public) -----------------------------------------------------
-    avatar_url: Mapped[str | None] = mapped_column(String(500))
+    # Text (not String(500)) so it can also hold a small inline data: URL when a
+    # user uploads a photo from their device (compressed client-side).
+    avatar_url: Mapped[str | None] = mapped_column(Text)
     bio: Mapped[str | None] = mapped_column(String(500))
 
     # --- OAuth (provider secrets not required to run; slots for M-later) -------

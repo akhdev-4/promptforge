@@ -24,7 +24,8 @@ class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=3, max_length=50)
     full_name: str | None = Field(default=None, max_length=120)
     bio: str | None = Field(default=None, max_length=500)
-    avatar_url: str | None = Field(default=None, max_length=500)
+    # No length cap — may hold a compressed inline data: URL (device upload).
+    avatar_url: str | None = None
 
 
 class UserRead(BaseModel):
