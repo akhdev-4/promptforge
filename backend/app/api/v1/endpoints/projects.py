@@ -9,6 +9,7 @@ from fastapi import APIRouter, Query, status
 from app.api.deps import CurrentUser, DbSession
 from app.schemas.common import Page, PageParams
 from app.schemas.project import (
+    ComponentCatalogItem,
     ComponentCreate,
     ComponentRead,
     ModuleCreate,
@@ -92,6 +93,23 @@ async def delete_module(module_id: uuid.UUID, db: DbSession, user: CurrentUser) 
 
 
 # --- Components -------------------------------------------------------------
+@router.get(
+    "/components",
+    response_model=Page[ComponentCatalogItem],
+    summary="List all components across projects",
+)
+async def list_components(
+    db: DbSession,
+    page: int = Query(1, ge=1),
+    size: int = Query(30, ge=1, le=100),
+) -> Page[ComponentCatalogItem]:
+    params = PageParams(page=page, size=size)
+    items, total = await ProjectService(db).list_components(
+        offset=params.offset, limit=params.limit
+    )
+    return Page.create(items, total, params)
+
+
 @router.post(
     "/modules/{module_id}/components",
     response_model=ComponentRead,

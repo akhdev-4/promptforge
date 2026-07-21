@@ -81,6 +81,34 @@ async def test_component_holds_prompt_variants(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_component_catalog_lists_with_context(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    built = await _build_project(client, headers)
+    cid = built["component"]["id"]
+
+    await client.post(
+        PROMPTS,
+        json={
+            "title": "Modern SaaS Login",
+            "content": "...",
+            "prompt_type": "ui",
+            "complexity": "intermediate",
+            "status": "published",
+            "component_id": cid,
+        },
+        headers=headers,
+    )
+
+    catalog = (await client.get(f"{PROJECTS}/components")).json()
+    match = next(c for c in catalog["items"] if c["id"] == cid)
+    assert match["name"] == "Login"
+    assert match["module_name"] == "Authentication"
+    assert match["project_name"] == "CRM Application"
+    assert match["project_id"] == built["project"]["id"]
+    assert match["prompt_count"] == 1
+
+
+@pytest.mark.asyncio
 async def test_prompt_detail_shows_component(client: AsyncClient) -> None:
     _, headers = await make_user(client)
     built = await _build_project(client, headers)

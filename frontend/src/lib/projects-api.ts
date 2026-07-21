@@ -1,11 +1,16 @@
 /** Project / module / component API wrappers. */
 
 import { apiFetch } from "@/lib/api";
-import type { Page, ProjectSummary, ProjectTree } from "@/types";
+import type { ComponentCatalogItem, Page, ProjectSummary, ProjectTree } from "@/types";
 
 export const projectsApi = {
   list: (page = 1, size = 30) =>
     apiFetch<Page<ProjectSummary>>(`/projects?page=${page}&size=${size}`, { auth: false }),
+
+  listComponents: (page = 1, size = 60) =>
+    apiFetch<Page<ComponentCatalogItem>>(`/projects/components?page=${page}&size=${size}`, {
+      auth: false,
+    }),
 
   tree: (id: string) => apiFetch<ProjectTree>(`/projects/${id}/tree`, { auth: false }),
 

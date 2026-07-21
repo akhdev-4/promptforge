@@ -88,6 +88,21 @@ class ProjectRead(BaseModel):
     created_at: datetime
 
 
+# --- Component catalog (flat, cross-project) --------------------------------
+class ComponentCatalogItem(BaseModel):
+    """A component surfaced on the global Components page, with its context."""
+
+    id: uuid.UUID
+    name: str
+    slug: str
+    description: str | None
+    prompt_count: int
+    module_id: uuid.UUID
+    module_name: str
+    project_id: uuid.UUID
+    project_name: str
+
+
 # --- Tree (nested with counts) ----------------------------------------------
 class ComponentNode(BaseModel):
     id: uuid.UUID

@@ -142,6 +142,18 @@ export interface ProjectTree extends ProjectSummary {
   modules: ModuleNode[];
 }
 
+export interface ComponentCatalogItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  prompt_count: number;
+  module_id: string;
+  module_name: string;
+  project_id: string;
+  project_name: string;
+}
+
 export interface PromptSummary {
   id: string;
   slug: string;

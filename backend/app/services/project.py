@@ -16,6 +16,7 @@ from app.repositories.project import (
     ProjectRepository,
 )
 from app.schemas.project import (
+    ComponentCatalogItem,
     ComponentCreate,
     ComponentNode,
     ModuleCreate,
@@ -167,3 +168,25 @@ class ProjectService:
 
     async def get_component(self, component_id: uuid.UUID) -> Component:
         return await self._component_or_404(component_id)
+
+    async def list_components(
+        self, *, offset: int, limit: int
+    ) -> tuple[list[ComponentCatalogItem], int]:
+        """Flat, cross-project component catalog with prompt counts."""
+        rows, total = await self.components.list_catalog(offset=offset, limit=limit)
+        counts = await self.components.prompt_counts([row[0].id for row in rows])
+        items = [
+            ComponentCatalogItem(
+                id=comp.id,
+                name=comp.name,
+                slug=comp.slug,
+                description=comp.description,
+                prompt_count=counts.get(comp.id, 0),
+                module_id=comp.module_id,
+                module_name=module_name,
+                project_id=project_id,
+                project_name=project_name,
+            )
+            for comp, module_name, project_id, project_name in rows
+        ]
+        return items, total

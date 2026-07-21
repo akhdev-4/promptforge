@@ -7,11 +7,19 @@ import { projectsApi } from "@/lib/projects-api";
 export const projectKeys = {
   all: ["projects"] as const,
   list: ["projects", "list"] as const,
+  components: ["projects", "components"] as const,
   tree: (id: string) => ["projects", "tree", id] as const,
 };
 
 export function useProjects() {
   return useQuery({ queryKey: projectKeys.list, queryFn: () => projectsApi.list() });
+}
+
+export function useComponents() {
+  return useQuery({
+    queryKey: projectKeys.components,
+    queryFn: () => projectsApi.listComponents(),
+  });
 }
 
 export function useProjectTree(id: string) {

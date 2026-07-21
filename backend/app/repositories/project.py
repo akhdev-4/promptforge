@@ -55,6 +55,27 @@ class ComponentRepository(BaseRepository[Component]):
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
+    async def list_catalog(self, *, offset: int, limit: int) -> tuple[list, int]:
+        """All components across every project, with their module/project context."""
+        total = int(
+            (await self.session.execute(select(func.count()).select_from(Component))).scalar_one()
+        )
+        stmt = (
+            select(
+                Component,
+                Module.name.label("module_name"),
+                Project.id.label("project_id"),
+                Project.name.label("project_name"),
+            )
+            .join(Module, Component.module_id == Module.id)
+            .join(Project, Module.project_id == Project.id)
+            .order_by(Component.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        rows = list((await self.session.execute(stmt)).all())
+        return rows, total
+
     async def prompt_counts(self, component_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
         """Published prompt count per component."""
         if not component_ids:
