@@ -1,6 +1,7 @@
 import { Copy, Eye, GitFork, Layers } from "lucide-react";
 import Link from "next/link";
 
+import { StarRating } from "@/components/prompts/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { complexityLabels, promptTypeLabels } from "@/lib/prompt-meta";
@@ -35,6 +36,15 @@ export function PromptCard({ prompt }: { prompt: PromptSummary }) {
         <p className="mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">
           {prompt.description ?? "No description provided."}
         </p>
+
+        <div className="mt-3 flex items-center gap-1.5">
+          <StarRating value={prompt.rating_avg} readOnly size="sm" />
+          <span className="text-xs text-muted-foreground">
+            {prompt.rating_count > 0
+              ? `${prompt.rating_avg.toFixed(1)} (${prompt.rating_count})`
+              : "Not rated yet"}
+          </span>
+        </div>
 
         <div className="mt-4 flex flex-wrap gap-1.5">
           {prompt.framework && <Badge variant="outline">{prompt.framework}</Badge>}

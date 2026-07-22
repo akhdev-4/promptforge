@@ -103,3 +103,15 @@ export function useToggleBookmark(promptId: string) {
     },
   });
 }
+
+export function useRatePrompt(promptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (stars: number | null) =>
+      stars === null ? interactionsApi.unrate(promptId) : interactionsApi.rate(promptId, stars),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: promptKeys.detail(promptId) });
+      void qc.invalidateQueries({ queryKey: promptKeys.all });
+    },
+  });
+}

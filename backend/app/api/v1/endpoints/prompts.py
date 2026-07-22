@@ -27,6 +27,8 @@ from app.schemas.prompt import (
     PromptSummary,
     PromptUpdate,
     PromptVersionRead,
+    RatingCreate,
+    RatingResult,
     VersionCreate,
 )
 from app.services.interaction import InteractionService
@@ -97,9 +99,11 @@ async def get_prompt(
     prompt = await PromptService(db).get_detail(prompt_id)
     detail = PromptDetail.model_validate(prompt)
     if user is not None:
-        liked, bookmarked = await InteractionService(db).flags(user.id, prompt_id)
+        interactions = InteractionService(db)
+        liked, bookmarked = await interactions.flags(user.id, prompt_id)
         detail.is_liked = liked
         detail.is_bookmarked = bookmarked
+        detail.my_rating = await interactions.my_rating(user.id, prompt_id)
     return detail
 
 
@@ -155,6 +159,22 @@ async def toggle_bookmark(
 ) -> BookmarkResponse:
     bookmarked = await InteractionService(db).toggle_bookmark(user.id, prompt_id)
     return BookmarkResponse(bookmarked=bookmarked)
+
+
+@router.post("/{prompt_id}/rating", response_model=RatingResult, summary="Rate a prompt (1-5)")
+async def rate_prompt(
+    prompt_id: uuid.UUID, data: RatingCreate, db: DbSession, user: CurrentUser
+) -> RatingResult:
+    avg, count, mine = await InteractionService(db).rate(user.id, prompt_id, data.stars)
+    return RatingResult(rating_avg=avg, rating_count=count, my_rating=mine)
+
+
+@router.delete("/{prompt_id}/rating", response_model=RatingResult, summary="Remove your rating")
+async def unrate_prompt(
+    prompt_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> RatingResult:
+    avg, count = await InteractionService(db).unrate(user.id, prompt_id)
+    return RatingResult(rating_avg=avg, rating_count=count, my_rating=None)
 
 
 @router.post(

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Enum,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -78,6 +79,10 @@ class Prompt(UUIDMixin, TimestampMixin, Base):
     likes_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     downloads_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     forks_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # --- Star ratings (denormalized aggregate of PromptRating rows) ------------
+    rating_avg: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    rating_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # --- Relationships --------------------------------------------------------
     author_id: Mapped[uuid.UUID] = mapped_column(

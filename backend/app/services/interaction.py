@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
-from app.models.interaction import PromptBookmark, PromptLike
+from app.models.interaction import PromptBookmark, PromptLike, PromptRating
 from app.models.prompt import Prompt
 from app.repositories.base import BaseRepository
 from app.repositories.prompt import PromptRepository
@@ -20,6 +20,7 @@ class InteractionService:
         self.prompts = PromptRepository(session)
         self.likes = BaseRepository(PromptLike, session)
         self.bookmarks = BaseRepository(PromptBookmark, session)
+        self.ratings = BaseRepository(PromptRating, session)
 
     async def _prompt_or_404(self, prompt_id: uuid.UUID) -> Prompt:
         prompt = await self.prompts.get(prompt_id)
@@ -53,6 +54,51 @@ class InteractionService:
             await self.bookmarks.get_by(user_id=user_id, prompt_id=prompt_id) is not None
         )
         return liked, bookmarked
+
+    # --- Star ratings --------------------------------------------------------
+    async def _recompute_rating(self, prompt: Prompt) -> tuple[float, int]:
+        """Recompute the prompt's aggregate rating from its rating rows and
+        persist it on the prompt (no incremental drift)."""
+        row = (
+            await self.session.execute(
+                select(func.avg(PromptRating.stars), func.count()).where(
+                    PromptRating.prompt_id == prompt.id
+                )
+            )
+        ).one()
+        avg = round(float(row[0] or 0.0), 3)
+        count = int(row[1] or 0)
+        prompt.rating_avg = avg
+        prompt.rating_count = count
+        self.session.add(prompt)
+        await self.session.flush()
+        return avg, count
+
+    async def rate(
+        self, user_id: uuid.UUID, prompt_id: uuid.UUID, stars: int
+    ) -> tuple[float, int, int]:
+        prompt = await self._prompt_or_404(prompt_id)
+        existing = await self.ratings.get_by(user_id=user_id, prompt_id=prompt_id)
+        if existing:
+            existing.stars = stars
+            self.session.add(existing)
+        else:
+            await self.ratings.create(user_id=user_id, prompt_id=prompt_id, stars=stars)
+        await self.session.flush()
+        avg, count = await self._recompute_rating(prompt)
+        return avg, count, stars
+
+    async def unrate(self, user_id: uuid.UUID, prompt_id: uuid.UUID) -> tuple[float, int]:
+        prompt = await self._prompt_or_404(prompt_id)
+        existing = await self.ratings.get_by(user_id=user_id, prompt_id=prompt_id)
+        if existing:
+            await self.ratings.delete(existing)
+            await self.session.flush()
+        return await self._recompute_rating(prompt)
+
+    async def my_rating(self, user_id: uuid.UUID, prompt_id: uuid.UUID) -> int | None:
+        rating = await self.ratings.get_by(user_id=user_id, prompt_id=prompt_id)
+        return rating.stars if rating else None
 
     async def list_bookmarks(
         self, user_id: uuid.UUID, *, offset: int, limit: int

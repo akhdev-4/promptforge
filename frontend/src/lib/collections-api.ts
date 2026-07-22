@@ -1,7 +1,13 @@
 /** Collection and interaction (like/bookmark) API wrappers. */
 
 import { apiFetch } from "@/lib/api";
-import type { Collection, CollectionDetail, Page, PromptSummary } from "@/types";
+import type {
+  Collection,
+  CollectionDetail,
+  Page,
+  PromptSummary,
+  RatingResult,
+} from "@/types";
 
 export const collectionsApi = {
   listPublic: (page = 1, size = 30) =>
@@ -39,4 +45,13 @@ export const interactionsApi = {
 
   myBookmarks: (page = 1, size = 30) =>
     apiFetch<Page<PromptSummary>>(`/users/me/bookmarks?page=${page}&size=${size}`),
+
+  rate: (promptId: string, stars: number) =>
+    apiFetch<RatingResult>(`/prompts/${promptId}/rating`, {
+      method: "POST",
+      body: { stars },
+    }),
+
+  unrate: (promptId: string) =>
+    apiFetch<RatingResult>(`/prompts/${promptId}/rating`, { method: "DELETE" }),
 };

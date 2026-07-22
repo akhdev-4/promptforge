@@ -66,6 +66,7 @@ export type PromptSort =
   | "most_viewed"
   | "most_copied"
   | "most_liked"
+  | "top_rated"
   | "title";
 
 export interface PromptAuthor {
@@ -170,6 +171,8 @@ export interface PromptSummary {
   copies_count: number;
   likes_count: number;
   forks_count: number;
+  rating_avg: number;
+  rating_count: number;
   author: PromptAuthor;
   category: CategoryRef | null;
   tags: Tag[];
@@ -223,6 +226,13 @@ export interface PromptDetail extends PromptSummary {
   assets: PromptAsset[];
   is_liked: boolean;
   is_bookmarked: boolean;
+  my_rating: number | null;
+}
+
+export interface RatingResult {
+  rating_avg: number;
+  rating_count: number;
+  my_rating: number | null;
 }
 
 export interface Collection {

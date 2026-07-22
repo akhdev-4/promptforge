@@ -13,7 +13,9 @@ from app.models.prompt import Prompt, PromptVersion
 from app.models.tag import Tag, prompt_tags
 from app.repositories.base import BaseRepository
 
-SortKey = Literal["newest", "oldest", "most_viewed", "most_copied", "most_liked", "title"]
+SortKey = Literal[
+    "newest", "oldest", "most_viewed", "most_copied", "most_liked", "top_rated", "title"
+]
 
 _SORT_COLUMNS = {
     "newest": Prompt.created_at.desc(),
@@ -21,6 +23,7 @@ _SORT_COLUMNS = {
     "most_viewed": Prompt.views_count.desc(),
     "most_copied": Prompt.copies_count.desc(),
     "most_liked": Prompt.likes_count.desc(),
+    "top_rated": (Prompt.rating_avg.desc(), Prompt.rating_count.desc()),
     "title": Prompt.title.asc(),
 }
 
@@ -131,7 +134,9 @@ class PromptRepository(BaseRepository[Prompt]):
         count_stmt = self._apply_filters(select(func.count()).select_from(Prompt), **filters)
         total = int((await self.session.execute(count_stmt)).scalar_one())
 
-        stmt = base.order_by(_SORT_COLUMNS[sort]).offset(offset).limit(limit)
+        order = _SORT_COLUMNS[sort]
+        order_cols = order if isinstance(order, tuple) else (order,)
+        stmt = base.order_by(*order_cols).offset(offset).limit(limit)
         rows = list((await self.session.execute(stmt)).unique().scalars().all())
         return rows, total
 

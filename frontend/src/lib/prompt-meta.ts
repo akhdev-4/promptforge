@@ -49,5 +49,6 @@ export const sortOptions: [string, string][] = [
   ["most_viewed", "Most viewed"],
   ["most_copied", "Most copied"],
   ["most_liked", "Most liked"],
+  ["top_rated", "Top rated"],
   ["title", "Title A–Z"],
 ];

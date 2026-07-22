@@ -125,6 +125,8 @@ class PromptSummary(BaseModel):
     copies_count: int
     likes_count: int
     forks_count: int
+    rating_avg: float = 0
+    rating_count: int = 0
     author: PromptAuthor
     category: PromptCategoryRef | None
     tags: list[TagRead]
@@ -147,6 +149,17 @@ class PromptDetail(PromptSummary):
     assets: list[AssetRead]
     is_liked: bool = False
     is_bookmarked: bool = False
+    my_rating: int | None = None
+
+
+class RatingCreate(BaseModel):
+    stars: int = Field(ge=1, le=5, description="1-5 star rating")
+
+
+class RatingResult(BaseModel):
+    rating_avg: float
+    rating_count: int
+    my_rating: int | None = None
 
 
 class PromptContent(BaseModel):

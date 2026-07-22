@@ -14,7 +14,11 @@ from app.db.base_class import Base  # noqa: F401
 from app.models.asset import PromptAsset  # noqa: F401,E402
 from app.models.category import Category  # noqa: F401,E402
 from app.models.collection import Collection, CollectionItem  # noqa: F401,E402
-from app.models.interaction import PromptBookmark, PromptLike  # noqa: F401,E402
+from app.models.interaction import (  # noqa: F401,E402
+    PromptBookmark,
+    PromptLike,
+    PromptRating,
+)
 from app.models.project import Component, Module, Project  # noqa: F401,E402
 from app.models.prompt import Prompt, PromptVersion  # noqa: F401,E402
 from app.models.tag import Tag, prompt_tags  # noqa: F401,E402

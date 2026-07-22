@@ -37,7 +37,8 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TabBar, type TabItem } from "@/components/ui/tabs";
 import { PromptCard } from "@/components/prompts/prompt-card";
-import { useToggleBookmark, useToggleLike } from "@/hooks/use-collections";
+import { StarRating } from "@/components/prompts/star-rating";
+import { useRatePrompt, useToggleBookmark, useToggleLike } from "@/hooks/use-collections";
 import {
   useCompareVersions,
   useDeletePrompt,
@@ -77,6 +78,7 @@ export default function PromptDetailPage() {
   const fork = useForkPrompt();
   const like = useToggleLike(id);
   const bookmark = useToggleBookmark(id);
+  const rate = useRatePrompt(id);
   const { data: related } = useRelatedPrompts(id);
   const [tab, setTab] = React.useState("overview");
 
@@ -223,6 +225,41 @@ export default function PromptDetailPage() {
               can edit this prompt. You can copy, fork, or save it.
             </p>
           )}
+
+          {/* Star ratings */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-card/60 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <StarRating value={prompt.rating_avg} readOnly size="md" />
+              <span className="text-sm">
+                <span className="font-semibold">{prompt.rating_avg.toFixed(1)}</span>
+                <span className="text-muted-foreground">
+                  {" · "}
+                  {prompt.rating_count} rating{prompt.rating_count === 1 ? "" : "s"}
+                </span>
+              </span>
+            </div>
+            {user && (
+              <div className="flex items-center gap-2 sm:ml-auto">
+                <span className="text-xs text-muted-foreground">
+                  {prompt.my_rating ? "Your rating" : "Rate it"}
+                </span>
+                <StarRating
+                  value={prompt.my_rating ?? 0}
+                  onRate={(s) => rate.mutate(s)}
+                  size="md"
+                />
+                {prompt.my_rating != null && (
+                  <button
+                    onClick={() => rate.mutate(null)}
+                    disabled={rate.isPending}
+                    className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
