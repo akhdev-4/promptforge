@@ -83,14 +83,43 @@ export default function PromptDetailPage() {
   const rate = useRatePrompt(id);
   const { data: related } = useRelatedPrompts(id);
   const [tab, setTab] = React.useState("overview");
+  const [pgSeen, setPgSeen] = React.useState(true); // assume seen until we read storage (avoids flash)
   const panelRef = React.useRef<HTMLDivElement>(null);
+  const deepLinked = React.useRef(false);
+
+  React.useEffect(() => {
+    setPgSeen(localStorage.getItem("pf_playground_seen") === "1");
+  }, []);
+
+  const markPlaygroundSeen = React.useCallback(() => {
+    localStorage.setItem("pf_playground_seen", "1");
+    setPgSeen(true);
+  }, []);
 
   const goToPlayground = React.useCallback(() => {
     setTab("playground");
+    markPlaygroundSeen();
     requestAnimationFrame(() =>
       panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
-  }, []);
+  }, [markPlaygroundSeen]);
+
+  const handleTabChange = React.useCallback(
+    (value: string) => {
+      setTab(value);
+      if (value === "playground") markPlaygroundSeen();
+    },
+    [markPlaygroundSeen],
+  );
+
+  // Deep link: /prompts/{id}?tab=playground opens the Playground directly.
+  React.useEffect(() => {
+    if (deepLinked.current || !user) return;
+    if (new URLSearchParams(window.location.search).get("tab") === "playground") {
+      deepLinked.current = true;
+      goToPlayground();
+    }
+  }, [user, goToPlayground]);
 
   // Version compare state.
   const [fromV, setFromV] = React.useState<number | null>(null);
@@ -129,7 +158,7 @@ export default function PromptDetailPage() {
   const codes = prompt.assets.filter((a) => a.kind === "generated_code");
 
   const tabs: TabItem[] = [{ value: "overview", label: "Overview" }];
-  if (user) tabs.push({ value: "playground", label: "Playground" });
+  if (user) tabs.push({ value: "playground", label: "Playground", dot: !pgSeen });
   tabs.push(
     { value: "preview", label: "Preview", count: shots.length + lives.length || undefined },
     { value: "code", label: "Code", count: codes.length || undefined },
@@ -354,7 +383,7 @@ export default function PromptDetailPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main tabbed panel */}
         <div ref={panelRef} className="space-y-4 lg:col-span-2">
-          <TabBar tabs={tabs} value={tab} onChange={setTab} />
+          <TabBar tabs={tabs} value={tab} onChange={handleTabChange} />
 
           {tab === "overview" && (
             <div className="space-y-6">

@@ -6,6 +6,8 @@ export interface TabItem {
   value: string;
   label: string;
   count?: number;
+  /** Show a small "new / unseen" dot next to the label. */
+  dot?: boolean;
 }
 
 export function TabBar({
@@ -31,6 +33,9 @@ export function TabBar({
             )}
           >
             {tab.label}
+            {tab.dot && (
+              <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
+            )}
             {tab.count != null && (
               <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs">
                 {tab.count}

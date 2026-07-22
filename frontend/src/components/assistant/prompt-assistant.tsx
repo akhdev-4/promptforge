@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Play, Send, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -268,35 +268,45 @@ export function PromptAssistant() {
                 >
                   <p className="whitespace-pre-wrap">{m.text}</p>
                   {m.results && m.results.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {m.results.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/prompts/${p.id}`}
-                          onClick={() => setOpen(false)}
-                          className="block rounded-lg border border-border bg-background p-2.5 transition-colors hover:border-primary/40"
-                        >
-                          <div className="mb-1 flex items-center gap-1.5">
-                            <Badge variant="secondary" className="text-[10px]">
-                              {promptTypeLabels[p.prompt_type]}
-                            </Badge>
-                            {p.category && (
-                              <span className="truncate text-[11px] text-muted-foreground">
-                                {p.category.name}
-                              </span>
-                            )}
-                          </div>
-                          <p className="line-clamp-1 text-sm font-medium text-foreground">
-                            {p.title}
-                          </p>
-                          {p.description && (
-                            <p className="line-clamp-1 text-xs text-muted-foreground">
-                              {p.description}
+                    <>
+                      <div className="mt-2 space-y-2">
+                        {m.results.map((p) => (
+                          <Link
+                            key={p.id}
+                            href={`/prompts/${p.id}`}
+                            onClick={() => setOpen(false)}
+                            className="block rounded-lg border border-border bg-background p-2.5 transition-colors hover:border-primary/40"
+                          >
+                            <div className="mb-1 flex items-center gap-1.5">
+                              <Badge variant="secondary" className="text-[10px]">
+                                {promptTypeLabels[p.prompt_type]}
+                              </Badge>
+                              {p.category && (
+                                <span className="truncate text-[11px] text-muted-foreground">
+                                  {p.category.name}
+                                </span>
+                              )}
+                            </div>
+                            <p className="line-clamp-1 text-sm font-medium text-foreground">
+                              {p.title}
                             </p>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
+                            {p.description && (
+                              <p className="line-clamp-1 text-xs text-muted-foreground">
+                                {p.description}
+                              </p>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                      <Link
+                        href={`/prompts/${m.results[0]!.id}?tab=playground`}
+                        onClick={() => setOpen(false)}
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        <Play className="h-3.5 w-3.5" /> Want me to run one? Try the top pick in
+                        the Playground →
+                      </Link>
+                    </>
                   )}
                 </div>
               </div>
