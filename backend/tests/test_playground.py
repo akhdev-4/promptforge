@@ -78,6 +78,8 @@ async def test_run_image_mode_returns_image_url(client: AsyncClient) -> None:
     assert body["provider"] == "pollinations"
     assert body["image_url"] and body["image_url"].startswith("https://image.pollinations.ai/")
     assert "warm" in body["image_url"]  # variable substituted into the image prompt
+    # Slashes/newlines are stripped so the Pollinations path doesn't 404.
+    assert "%2F" not in body["image_url"] and "%0A" not in body["image_url"]
 
 
 @pytest.mark.asyncio

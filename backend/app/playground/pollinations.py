@@ -9,6 +9,7 @@ server-side network call.
 from __future__ import annotations
 
 import random
+import re
 from urllib.parse import quote
 
 from app.playground.base import RunResult
@@ -17,9 +18,17 @@ _BASE = "https://image.pollinations.ai/prompt/"
 _MAX_PROMPT = 1200  # keep the generated URL well under length limits
 
 
+def _clean(prompt: str) -> str:
+    """Flatten a prompt into a single URL-safe line. Slashes (even encoded as
+    %2F) and newlines break Pollinations' path routing (-> 404), so drop them."""
+    text = prompt.replace("/", " ")
+    text = re.sub(r"\s+", " ", text)  # newlines + runs of whitespace -> one space
+    return text.strip()[:_MAX_PROMPT]
+
+
 class PollinationsProvider:
     async def run(self, prompt: str) -> RunResult:
-        text = prompt.strip()[:_MAX_PROMPT]
+        text = _clean(prompt)
         seed = random.randint(1, 10_000_000)
         url = f"{_BASE}{quote(text)}?width=768&height=768&nologo=true&seed={seed}"
         return RunResult(
