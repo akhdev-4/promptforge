@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
+import { PromptAssistant } from "@/components/assistant/prompt-assistant";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { useAuthStore } from "@/stores/auth";
@@ -38,6 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
         </main>
       </div>
+      <PromptAssistant />
     </div>
   );
 }
