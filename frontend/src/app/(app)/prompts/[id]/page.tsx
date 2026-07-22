@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   Bookmark,
+  Calendar,
   Copy,
   Eye,
   GitFork,
@@ -49,6 +50,11 @@ import { cn } from "@/lib/utils";
 import { complexityLabels, promptTypeLabels, statusLabels } from "@/lib/prompt-meta";
 import { formatDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+
+function authorInitials(fullName: string | null, username: string | null): string {
+  const base = (fullName?.trim() || username?.trim() || "?").split(/\s+/);
+  return (base[0]![0]! + (base[1]?.[0] ?? "")).toUpperCase();
+}
 
 function MetaRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (!value) return null;
@@ -165,12 +171,36 @@ export default function PromptDetailPage() {
               ))}
             </div>
           )}
-          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-            <span>
-              by{" "}
-              <span className="font-medium text-foreground">
-                {prompt.author.full_name ?? prompt.author.username ?? "unknown"}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-xs text-muted-foreground">
+            {/* Who added this prompt */}
+            <span className="flex items-center gap-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                {prompt.author.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={prompt.author.avatar_url}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  authorInitials(prompt.author.full_name, prompt.author.username)
+                )}
               </span>
+              <span className="flex flex-col leading-tight">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  {prompt.author.full_name ?? prompt.author.username ?? "Unknown user"}
+                  {isOwner && (
+                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                      You
+                    </Badge>
+                  )}
+                </span>
+                {prompt.author.username && <span>@{prompt.author.username}</span>}
+              </span>
+            </span>
+
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" /> Added {formatDate(prompt.created_at)}
             </span>
             <span className="flex items-center gap-1">
               <Eye className="h-3.5 w-3.5" /> {prompt.views_count}
@@ -182,6 +212,17 @@ export default function PromptDetailPage() {
               <GitFork className="h-3.5 w-3.5" /> {prompt.forks_count}
             </span>
           </div>
+
+          {/* Ownership note for non-owners */}
+          {user && !canEdit && (
+            <p className="text-xs text-muted-foreground">
+              Only{" "}
+              <span className="font-medium text-foreground">
+                {prompt.author.full_name ?? prompt.author.username ?? "the author"}
+              </span>{" "}
+              can edit this prompt. You can copy, fork, or save it.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
