@@ -33,6 +33,7 @@ class RunResult:
     provider: str
     model: str | None
     is_demo: bool
+    image_url: str | None = None
 
 
 class RunProvider(Protocol):

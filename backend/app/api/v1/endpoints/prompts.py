@@ -174,7 +174,7 @@ async def run_prompt(
     prompt = await PromptService(db).get_detail(prompt_id, count_view=False)
     rendered = render_prompt(prompt.content, data.variables)
     try:
-        result = await get_run_provider().run(rendered)
+        result = await get_run_provider(data.mode).run(rendered)
     except Exception as exc:  # noqa: BLE001 - surface any provider failure cleanly
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -186,6 +186,7 @@ async def run_prompt(
         provider=result.provider,
         model=result.model,
         is_demo=result.is_demo,
+        image_url=result.image_url,
     )
 
 

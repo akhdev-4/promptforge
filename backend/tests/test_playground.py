@@ -52,6 +52,35 @@ async def test_run_demo_mode(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_run_image_mode_returns_image_url(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    prompt = (
+        await client.post(
+            PROMPTS,
+            json={
+                "title": "Ghibli portrait",
+                "content": "A {{style}} portrait in Studio Ghibli style",
+                "prompt_type": "other",
+                "complexity": "beginner",
+                "status": "published",
+            },
+            headers=headers,
+        )
+    ).json()
+
+    resp = await client.post(
+        f"{PROMPTS}/{prompt['id']}/run",
+        json={"mode": "image", "variables": {"style": "warm"}},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["provider"] == "pollinations"
+    assert body["image_url"] and body["image_url"].startswith("https://image.pollinations.ai/")
+    assert "warm" in body["image_url"]  # variable substituted into the image prompt
+
+
+@pytest.mark.asyncio
 async def test_run_requires_auth(client: AsyncClient) -> None:
     _, headers = await make_user(client)
     prompt = (

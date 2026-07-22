@@ -389,7 +389,17 @@ export default function PromptDetailPage() {
           )}
 
           {tab === "playground" && (
-            <Playground promptId={prompt.id} content={prompt.content} />
+            <Playground
+              promptId={prompt.id}
+              content={prompt.content}
+              defaultMode={
+                /image|photo|portrait|avatar|art|illustration|sticker|logo|social|creative|editing/i.test(
+                  `${prompt.category?.name ?? ""} ${prompt.title}`,
+                )
+                  ? "image"
+                  : "text"
+              }
+            />
           )}
 
           {tab === "preview" && (

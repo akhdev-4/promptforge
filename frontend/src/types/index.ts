@@ -241,6 +241,7 @@ export interface PlaygroundRunResult {
   provider: string;
   model: string | null;
   is_demo: boolean;
+  image_url: string | null;
 }
 
 export interface Collection {

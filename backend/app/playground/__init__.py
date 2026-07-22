@@ -17,7 +17,11 @@ from app.playground.base import (
 from app.playground.mock import MockProvider
 
 
-def get_run_provider() -> RunProvider:
+def get_run_provider(mode: str = "text") -> RunProvider:
+    if mode == "image":
+        from app.playground.pollinations import PollinationsProvider
+
+        return PollinationsProvider()
     if settings.LLM_PROVIDER == "gemini" and settings.GEMINI_API_KEY:
         from app.playground.gemini import GeminiProvider
 

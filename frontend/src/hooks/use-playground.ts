@@ -2,11 +2,11 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { playgroundApi } from "@/lib/playground-api";
+import { playgroundApi, type RunMode } from "@/lib/playground-api";
 
 export function useRunPrompt(promptId: string) {
   return useMutation({
-    mutationFn: (variables: Record<string, string>) =>
-      playgroundApi.run(promptId, variables),
+    mutationFn: (args: { variables: Record<string, string>; mode: RunMode }) =>
+      playgroundApi.run(promptId, args.variables, args.mode),
   });
 }
