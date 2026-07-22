@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 import { navSections } from "@/config/nav";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,7 @@ export function Sidebar({ className }: { className?: string }) {
       )}
     >
       <div className="flex h-16 items-center gap-2 px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-          <Flame className="h-5 w-5" />
-        </div>
+        <Logo className="h-8 w-8" />
         <span className="text-lg font-semibold tracking-tight">PromptForge</span>
       </div>
 

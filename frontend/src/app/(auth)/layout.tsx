@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,9 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       />
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
-            <Flame className="h-6 w-6" />
-          </div>
+          <Logo className="mb-3 h-14 w-14" />
           <h1 className="text-2xl font-semibold tracking-tight">PromptForge</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Production-tested prompts, reusable by design.
