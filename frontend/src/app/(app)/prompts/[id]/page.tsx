@@ -22,6 +22,7 @@ import { CodeView } from "@/components/prompts/code-view";
 import { CopyButton } from "@/components/prompts/copy-button";
 import { LivePreview } from "@/components/prompts/live-preview";
 import { MarkdownView } from "@/components/prompts/markdown-view";
+import { Playground } from "@/components/prompts/playground";
 import { PreviewGallery } from "@/components/prompts/preview-gallery";
 import { VersionDiff } from "@/components/prompts/version-diff";
 import { Badge } from "@/components/ui/badge";
@@ -118,12 +119,13 @@ export default function PromptDetailPage() {
   const lives = prompt.assets.filter((a) => a.kind === "generated_html" || a.kind === "live_demo");
   const codes = prompt.assets.filter((a) => a.kind === "generated_code");
 
-  const tabs: TabItem[] = [
-    { value: "overview", label: "Overview" },
+  const tabs: TabItem[] = [{ value: "overview", label: "Overview" }];
+  if (user) tabs.push({ value: "playground", label: "Playground" });
+  tabs.push(
     { value: "preview", label: "Preview", count: shots.length + lives.length || undefined },
     { value: "code", label: "Code", count: codes.length || undefined },
     { value: "versions", label: "Versions", count: prompt.current_version },
-  ];
+  );
   if (canEdit) tabs.push({ value: "assets", label: "Manage previews" });
 
   const onDelete = async () => {
@@ -384,6 +386,10 @@ export default function PromptDetailPage() {
                 </Card>
               )}
             </div>
+          )}
+
+          {tab === "playground" && (
+            <Playground promptId={prompt.id} content={prompt.content} />
           )}
 
           {tab === "preview" && (

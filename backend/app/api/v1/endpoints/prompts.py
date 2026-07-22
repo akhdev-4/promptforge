@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import (
     CurrentUser,
@@ -15,11 +15,13 @@ from app.api.deps import (
 )
 from app.models.enums import PromptStatus, PromptType
 from app.models.user import User
+from app.playground import get_run_provider, render_prompt
 from app.recommendations import get_related_provider
 from app.repositories.prompt import SortKey
 from app.schemas.asset import AssetCreate, AssetRead, VersionCompare
 from app.schemas.collection import BookmarkResponse, LikeResponse
 from app.schemas.common import Page, PageParams
+from app.schemas.playground import PlaygroundRunRequest, PlaygroundRunResult
 from app.schemas.prompt import (
     PromptContent,
     PromptCreate,
@@ -159,6 +161,32 @@ async def toggle_bookmark(
 ) -> BookmarkResponse:
     bookmarked = await InteractionService(db).toggle_bookmark(user.id, prompt_id)
     return BookmarkResponse(bookmarked=bookmarked)
+
+
+@router.post(
+    "/{prompt_id}/run",
+    response_model=PlaygroundRunResult,
+    summary="Run a prompt in the Playground",
+)
+async def run_prompt(
+    prompt_id: uuid.UUID, data: PlaygroundRunRequest, db: DbSession, user: CurrentUser
+) -> PlaygroundRunResult:
+    prompt = await PromptService(db).get_detail(prompt_id, count_view=False)
+    rendered = render_prompt(prompt.content, data.variables)
+    try:
+        result = await get_run_provider().run(rendered)
+    except Exception as exc:  # noqa: BLE001 - surface any provider failure cleanly
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"The model provider couldn't be reached: {exc}",
+        ) from exc
+    return PlaygroundRunResult(
+        output=result.output,
+        rendered_prompt=rendered,
+        provider=result.provider,
+        model=result.model,
+        is_demo=result.is_demo,
+    )
 
 
 @router.post("/{prompt_id}/rating", response_model=RatingResult, summary="Rate a prompt (1-5)")

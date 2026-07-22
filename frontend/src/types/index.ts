@@ -235,6 +235,14 @@ export interface RatingResult {
   my_rating: number | null;
 }
 
+export interface PlaygroundRunResult {
+  output: string;
+  rendered_prompt: string;
+  provider: string;
+  model: string | null;
+  is_demo: boolean;
+}
+
 export interface Collection {
   id: string;
   name: string;

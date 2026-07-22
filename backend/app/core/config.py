@@ -60,6 +60,14 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
 
+    # --- Playground (prompt runner) -------------------------------------------
+    # "mock" = zero-key demo output. "gemini" = real output via Google's free
+    # tier (get a key at aistudio.google.com, no card needed) — set GEMINI_API_KEY.
+    LLM_PROVIDER: Literal["mock", "gemini"] = "mock"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-flash-latest"
+    PLAYGROUND_MAX_TOKENS: int = 1024
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def _split_cors(cls, value: object) -> object:
