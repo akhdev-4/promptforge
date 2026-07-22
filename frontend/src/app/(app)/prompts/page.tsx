@@ -363,12 +363,8 @@ function PromptsLibrary() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-2">
-            <p className="text-sm text-muted-foreground">
-              {data.total} prompt{data.total === 1 ? "" : "s"} · page {data.page} of{" "}
-              {data.pages || 1}
-            </p>
-            <div className="flex gap-2">
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -377,6 +373,9 @@ function PromptsLibrary() {
               >
                 Previous
               </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {data.page} of {data.pages || 1}
+              </span>
               <Button
                 variant="outline"
                 size="sm"
@@ -386,6 +385,9 @@ function PromptsLibrary() {
                 Next
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              {data.total} prompt{data.total === 1 ? "" : "s"}
+            </p>
           </div>
         </>
       ) : (
