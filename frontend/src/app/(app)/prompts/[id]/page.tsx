@@ -10,6 +10,7 @@ import {
   Heart,
   Layers,
   Pencil,
+  Play,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -82,6 +83,14 @@ export default function PromptDetailPage() {
   const rate = useRatePrompt(id);
   const { data: related } = useRelatedPrompts(id);
   const [tab, setTab] = React.useState("overview");
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  const goToPlayground = React.useCallback(() => {
+    setTab("playground");
+    requestAnimationFrame(() =>
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  }, []);
 
   // Version compare state.
   const [fromV, setFromV] = React.useState<number | null>(null);
@@ -267,6 +276,11 @@ export default function PromptDetailPage() {
         <div className="flex flex-wrap gap-2">
           <CopyButton promptId={prompt.id} content={prompt.content} />
           {user && (
+            <Button onClick={goToPlayground}>
+              <Play className="h-4 w-4" /> Run prompt
+            </Button>
+          )}
+          {user && (
             <>
               <Button
                 variant="outline"
@@ -339,11 +353,33 @@ export default function PromptDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main tabbed panel */}
-        <div className="space-y-4 lg:col-span-2">
+        <div ref={panelRef} className="space-y-4 lg:col-span-2">
           <TabBar tabs={tabs} value={tab} onChange={setTab} />
 
           {tab === "overview" && (
             <div className="space-y-6">
+              {user && (
+                <button
+                  onClick={goToPlayground}
+                  className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent p-3 text-left transition-colors hover:from-primary/15"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <Play className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">
+                      See what this prompt actually produces
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Run it live in the Playground — real output, no copy-paste.
+                    </span>
+                  </span>
+                  <span className="hidden shrink-0 text-sm font-medium text-primary sm:block">
+                    Open Playground →
+                  </span>
+                </button>
+              )}
+
               <Card>
                 <CardHeader className="flex-row items-center justify-between">
                   <CardTitle>Prompt</CardTitle>
