@@ -30,14 +30,17 @@ export function Playground({
   promptId,
   content,
   defaultMode = "text",
+  allowImage = true,
 }: {
   promptId: string;
   content: string;
   defaultMode?: RunMode;
+  /** Whether the Image (generation) mode is offered — only for image prompts. */
+  allowImage?: boolean;
 }) {
   const vars = React.useMemo(() => extractVars(content), [content]);
   const [values, setValues] = React.useState<Record<string, string>>({});
-  const [mode, setMode] = React.useState<RunMode>(defaultMode);
+  const [mode, setMode] = React.useState<RunMode>(allowImage ? defaultMode : "text");
   const [copied, setCopied] = React.useState(false);
   const [imgLoading, setImgLoading] = React.useState(false);
   const run = useRunPrompt(promptId);
@@ -71,28 +74,30 @@ export function Playground({
         <p className="mt-1 text-xs text-muted-foreground">See what this prompt produces.</p>
       </div>
 
-      {/* Text / Image mode toggle */}
-      <div className="inline-flex rounded-lg border border-border p-0.5">
-        {(
-          [
-            ["text", "Text", Type],
-            ["image", "Image", ImageIcon],
-          ] as const
-        ).map(([value, label, Icon]) => (
-          <button
-            key={value}
-            onClick={() => changeMode(value)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              mode === value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="h-4 w-4" /> {label}
-          </button>
-        ))}
-      </div>
+      {/* Text / Image mode toggle — only for image prompts */}
+      {allowImage && (
+        <div className="inline-flex rounded-lg border border-border p-0.5">
+          {(
+            [
+              ["text", "Text", Type],
+              ["image", "Image", ImageIcon],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <button
+              key={value}
+              onClick={() => changeMode(value)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                mode === value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" /> {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {mode === "image" && (
         <p className="text-xs text-muted-foreground">

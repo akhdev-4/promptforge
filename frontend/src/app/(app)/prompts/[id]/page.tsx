@@ -153,6 +153,12 @@ export default function PromptDetailPage() {
   const canModerate = user?.role === "moderator" || user?.role === "administrator";
   const canEdit = isOwner || canModerate;
 
+  // Image generation only makes sense for image/creative prompts — not code.
+  const isImagePrompt =
+    /image|photo|portrait|avatar|art|illustration|sticker|logo|social|creative|editing/i.test(
+      `${prompt.category?.name ?? ""} ${prompt.title}`,
+    );
+
   const shots = prompt.assets.filter((a) => a.kind === "screenshot" || a.kind === "image");
   const lives = prompt.assets.filter((a) => a.kind === "generated_html" || a.kind === "live_demo");
   const codes = prompt.assets.filter((a) => a.kind === "generated_code");
@@ -457,13 +463,8 @@ export default function PromptDetailPage() {
             <Playground
               promptId={prompt.id}
               content={prompt.content}
-              defaultMode={
-                /image|photo|portrait|avatar|art|illustration|sticker|logo|social|creative|editing/i.test(
-                  `${prompt.category?.name ?? ""} ${prompt.title}`,
-                )
-                  ? "image"
-                  : "text"
-              }
+              allowImage={isImagePrompt}
+              defaultMode={isImagePrompt ? "image" : "text"}
             />
           )}
 
