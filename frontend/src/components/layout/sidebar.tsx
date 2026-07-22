@@ -18,7 +18,7 @@ export function Sidebar({ className }: { className?: string }) {
       )}
     >
       <div className="flex h-16 items-center gap-2 px-6">
-        <Logo className="h-8 w-8" />
+        <Logo className="h-9 w-auto" />
         <span className="text-lg font-semibold tracking-tight">PromptForge</span>
       </div>
 
