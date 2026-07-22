@@ -18,7 +18,7 @@ export function TabBar({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-border">
+    <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
       {tabs.map((tab) => {
         const active = tab.value === value;
         return (
@@ -37,7 +37,7 @@ export function TabBar({
               </span>
             )}
             {active && (
-              <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
+              <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
             )}
           </button>
         );
