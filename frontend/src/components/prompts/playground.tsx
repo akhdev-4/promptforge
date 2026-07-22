@@ -3,6 +3,7 @@
 import { Check, Copy, FlaskConical, ImageIcon, Loader2, Play, Type } from "lucide-react";
 import * as React from "react";
 
+import { MarkdownView } from "@/components/prompts/markdown-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -192,9 +193,9 @@ export function Playground({
               {copied ? "Copied" : "Copy"}
             </Button>
           </div>
-          <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-muted/40 p-4 text-sm">
-            {result.output}
-          </pre>
+          <div className="max-h-[480px] overflow-auto rounded-xl border border-border bg-muted/40 p-4 text-sm">
+            <MarkdownView content={result.output} />
+          </div>
           {result.is_demo && (
             <p className="text-xs text-muted-foreground">
               This is placeholder output. Connect a Gemini key on the backend to see real

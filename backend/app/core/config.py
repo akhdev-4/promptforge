@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     LLM_PROVIDER: Literal["mock", "gemini"] = "mock"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-flash-latest"
-    PLAYGROUND_MAX_TOKENS: int = 1024
+    PLAYGROUND_MAX_TOKENS: int = 8192  # room for full code output without truncation
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
