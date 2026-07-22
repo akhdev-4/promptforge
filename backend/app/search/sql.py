@@ -32,6 +32,7 @@ class SqlSearchProvider:
             status=query.status,
             author_id=query.author_id,
             category_ids=query.category_ids,
+            exclude_category_ids=query.exclude_category_ids,
             tag_slugs=query.tag_slugs,
             component_id=query.component_id,
             sort=query.sort,

@@ -63,6 +63,9 @@ async def list_prompts(
     status: PromptStatus | None = PromptStatus.PUBLISHED,
     author_id: uuid.UUID | None = None,
     category_id: uuid.UUID | None = Query(None, description="Includes descendant categories"),
+    exclude_category_id: uuid.UUID | None = Query(
+        None, description="Excludes this category and its descendants (keeps uncategorized)"
+    ),
     component_id: uuid.UUID | None = Query(None, description="Variants in a component"),
     tags: list[str] | None = Query(None, description="Tag slugs; matches any"),
     sort: SortKey = "newest",
@@ -79,6 +82,7 @@ async def list_prompts(
         status=status,
         author_id=author_id,
         category_id=category_id,
+        exclude_category_id=exclude_category_id,
         component_id=component_id,
         tags=tags,
         sort=sort,

@@ -47,6 +47,7 @@ class PromptRepository(BaseRepository[Prompt]):
         status: PromptStatus | None,
         author_id: uuid.UUID | None,
         category_ids: list[uuid.UUID] | None = None,
+        exclude_category_ids: list[uuid.UUID] | None = None,
         tag_slugs: list[str] | None = None,
         component_id: uuid.UUID | None = None,
     ):
@@ -73,6 +74,15 @@ class PromptRepository(BaseRepository[Prompt]):
             stmt = stmt.where(Prompt.author_id == author_id)
         if category_ids:
             stmt = stmt.where(Prompt.category_id.in_(category_ids))
+        if exclude_category_ids:
+            # Keep uncategorized prompts: NULL category is not "in" the excluded
+            # set, but SQL NOT IN would drop NULLs, so allow them explicitly.
+            stmt = stmt.where(
+                or_(
+                    Prompt.category_id.is_(None),
+                    Prompt.category_id.notin_(exclude_category_ids),
+                )
+            )
         if component_id:
             stmt = stmt.where(Prompt.component_id == component_id)
         if tag_slugs:
@@ -99,6 +109,7 @@ class PromptRepository(BaseRepository[Prompt]):
         status: PromptStatus | None = PromptStatus.PUBLISHED,
         author_id: uuid.UUID | None = None,
         category_ids: list[uuid.UUID] | None = None,
+        exclude_category_ids: list[uuid.UUID] | None = None,
         tag_slugs: list[str] | None = None,
         component_id: uuid.UUID | None = None,
         sort: SortKey = "newest",
@@ -112,6 +123,7 @@ class PromptRepository(BaseRepository[Prompt]):
             "status": status,
             "author_id": author_id,
             "category_ids": category_ids,
+            "exclude_category_ids": exclude_category_ids,
             "tag_slugs": tag_slugs,
             "component_id": component_id,
         }

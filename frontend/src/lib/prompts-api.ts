@@ -28,6 +28,7 @@ export interface PromptListParams {
   status?: PromptStatus;
   author_id?: string;
   category_id?: string;
+  exclude_category_id?: string;
   component_id?: string;
   tags?: string[];
   sort?: PromptSort;

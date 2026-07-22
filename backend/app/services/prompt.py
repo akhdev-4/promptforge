@@ -300,13 +300,20 @@ class PromptService:
         status: PromptStatus | None = PromptStatus.PUBLISHED,
         author_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        exclude_category_id: uuid.UUID | None = None,
         component_id: uuid.UUID | None = None,
         tags: list[str] | None = None,
         sort: SortKey = "newest",
     ) -> tuple[list[Prompt], int]:
-        # Filtering by a category includes its entire subtree.
+        # Filtering by a category includes its entire subtree (both include and
+        # exclude expand to the category plus all its descendants).
         category_ids = (
             await self.categories.descendant_ids(category_id) if category_id else None
+        )
+        exclude_category_ids = (
+            await self.categories.descendant_ids(exclude_category_id)
+            if exclude_category_id
+            else None
         )
         query = SearchQuery(
             offset=offset,
@@ -319,6 +326,7 @@ class PromptService:
             status=status,
             author_id=author_id,
             category_ids=category_ids,
+            exclude_category_ids=exclude_category_ids,
             tag_slugs=tags,
             component_id=component_id,
             sort=sort,

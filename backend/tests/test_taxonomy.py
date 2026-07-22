@@ -136,6 +136,42 @@ async def test_category_tree_and_descendant_search(
 
 
 @pytest.mark.asyncio
+async def test_exclude_category_keeps_uncategorized(
+    client: AsyncClient, db_session
+) -> None:
+    """exclude_category_id drops a whole subtree but keeps uncategorized prompts."""
+    from sqlalchemy import select
+
+    from app.models.category import Category
+    from app.models.prompt import Prompt
+    from app.models.user import User
+
+    root = Category(name="Creative & Media", slug="creative-media")
+    db_session.add(root)
+    await db_session.flush()
+    child = Category(name="AI Image Prompts", slug="ai-image", parent_id=root.id)
+    db_session.add(child)
+    await db_session.flush()
+
+    _, headers = await make_user(client)
+    user = (await db_session.execute(select(User).limit(1))).scalars().first()
+
+    db_session.add(
+        Prompt(title="Figurine", slug="figurine", content="x", author_id=user.id,
+               category_id=child.id)
+    )
+    db_session.add(
+        Prompt(title="Uncategorized Dev", slug="uncat-dev", content="x", author_id=user.id)
+    )
+    await db_session.flush()
+
+    resp = await client.get(PROMPTS, params={"exclude_category_id": str(root.id)})
+    titles = [x["title"] for x in resp.json()["items"]]
+    assert "Uncategorized Dev" in titles  # kept
+    assert "Figurine" not in titles  # excluded (in the subtree)
+
+
+@pytest.mark.asyncio
 async def test_category_tree_endpoint_with_data(client: AsyncClient, db_session) -> None:
     """Regression: the tree must not lazy-load the ORM `children` relationship
     (which would raise MissingGreenlet in the sync serialization path)."""

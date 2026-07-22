@@ -27,6 +27,7 @@ class SearchQuery:
     status: PromptStatus | None = PromptStatus.PUBLISHED
     author_id: uuid.UUID | None = None
     category_ids: list[uuid.UUID] | None = None
+    exclude_category_ids: list[uuid.UUID] | None = None
     tag_slugs: list[str] | None = None
     component_id: uuid.UUID | None = None
     sort: SortKey = "newest"

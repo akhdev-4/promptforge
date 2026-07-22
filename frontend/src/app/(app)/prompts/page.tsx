@@ -1,6 +1,6 @@
 "use client";
 
-import { Library, Plus, Search } from "lucide-react";
+import { Code2, LayoutGrid, Library, Plus, Search, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -17,6 +17,26 @@ import { cn } from "@/lib/utils";
 import type { CategoryNode, PromptSort, PromptType } from "@/types";
 
 const PAGE_SIZE = 12;
+
+const CREATIVE_ROOT = "Creative & Media";
+
+type Lane = "all" | "dev" | "creative";
+
+const LANES: { value: Lane; label: string; icon: typeof Code2; hint: string }[] = [
+  { value: "all", label: "All prompts", icon: LayoutGrid, hint: "Everything in the library" },
+  {
+    value: "dev",
+    label: "App Development",
+    icon: Code2,
+    hint: "Code, UI, APIs, databases & DevOps",
+  },
+  {
+    value: "creative",
+    label: "AI & Creative",
+    icon: Wand2,
+    hint: "AI image generation & photo editing",
+  },
+];
 
 function flatten(nodes: CategoryNode[], depth = 0): { id: string; label: string }[] {
   return nodes.flatMap((n) => [
@@ -42,13 +62,47 @@ function PromptsLibrary() {
     () => searchParams.get("category_id") ?? "",
   );
   const componentId = searchParams.get("component_id") ?? "";
+  const [lane, setLane] = React.useState<Lane>("all");
   const [activeTags, setActiveTags] = React.useState<string[]>([]);
   const [sort, setSort] = React.useState<PromptSort>("newest");
   const [page, setPage] = React.useState(1);
 
   const { data: tree } = useCategoryTree();
   const { data: popularTags } = usePopularTags(20);
-  const categoryOptions = React.useMemo(() => flatten(tree ?? []), [tree]);
+
+  // Split the category tree into the "Creative & Media" subtree vs. everything
+  // else, so each lane scopes its category dropdown and its query.
+  const creativeRoot = React.useMemo(
+    () => (tree ?? []).find((n) => n.name === CREATIVE_ROOT),
+    [tree],
+  );
+  const creativeRootId = creativeRoot?.id;
+  const creativeOptions = React.useMemo(
+    () => flatten(creativeRoot?.children ?? []),
+    [creativeRoot],
+  );
+  const devOptions = React.useMemo(
+    () => flatten((tree ?? []).filter((n) => n.id !== creativeRootId)),
+    [tree, creativeRootId],
+  );
+  const allOptions = React.useMemo(() => flatten(tree ?? []), [tree]);
+  const categoryOptions =
+    lane === "creative" ? creativeOptions : lane === "dev" ? devOptions : allOptions;
+
+  const changeLane = (next: Lane) => {
+    setLane(next);
+    setCategoryId(""); // clear any drill-down that belonged to the old lane
+    setPage(1);
+  };
+
+  // An explicit category drill-down wins; otherwise the lane sets the scope.
+  const categoryFilter = categoryId
+    ? { category_id: categoryId }
+    : lane === "creative" && creativeRootId
+      ? { category_id: creativeRootId }
+      : lane === "dev" && creativeRootId
+        ? { exclude_category_id: creativeRootId }
+        : {};
 
   // Debounce the search input.
   React.useEffect(() => {
@@ -71,7 +125,7 @@ function PromptsLibrary() {
     size: PAGE_SIZE,
     q: debouncedQ || undefined,
     prompt_type: type || undefined,
-    category_id: categoryId || undefined,
+    ...categoryFilter,
     component_id: componentId || undefined,
     tags: activeTags.length ? activeTags : undefined,
     sort,
@@ -83,7 +137,7 @@ function PromptsLibrary() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Prompt Library</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Browse and reuse production-tested prompts.
+            Pick a lane below — app development or AI &amp; creative — then search and filter.
           </p>
         </div>
         <Button asChild>
@@ -92,6 +146,47 @@ function PromptsLibrary() {
             New Prompt
           </Link>
         </Button>
+      </div>
+
+      {/* Lane switcher: App Development vs AI & Creative */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {LANES.map((l) => {
+          const active = lane === l.value;
+          const Icon = l.icon;
+          return (
+            <button
+              key={l.value}
+              onClick={() => changeLane(l.value)}
+              aria-pressed={active}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                active
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/40 hover:bg-accent",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                  active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span
+                  className={cn(
+                    "block text-sm font-medium",
+                    active ? "text-primary" : "text-foreground",
+                  )}
+                >
+                  {l.label}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">{l.hint}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}
