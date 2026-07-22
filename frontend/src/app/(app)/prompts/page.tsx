@@ -38,6 +38,86 @@ const LANES: { value: Lane; label: string; icon: typeof Code2; hint: string }[] 
   },
 ];
 
+// Per-lane color + decorative art for the (catchy) lane cards.
+function CloudsArt() {
+  return (
+    <svg
+      viewBox="0 0 140 70"
+      className="pointer-events-none absolute right-1 top-1/2 h-full w-32 -translate-y-1/2 text-violet-400/25"
+      fill="currentColor"
+      aria-hidden
+    >
+      <ellipse cx="96" cy="50" rx="34" ry="15" />
+      <ellipse cx="66" cy="55" rx="22" ry="11" />
+      <circle cx="112" cy="20" r="3" />
+      <circle cx="90" cy="14" r="2" />
+      <circle cx="122" cy="34" r="2" />
+      <path d="M104 8l1.6 3.2 3.4.5-2.5 2.4.6 3.4-3.1-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" />
+    </svg>
+  );
+}
+function CodeArt() {
+  return (
+    <div
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 select-none text-right font-mono text-[10px] leading-[13px] text-sky-500/25"
+      aria-hidden
+    >
+      <div>1010&nbsp;0110</div>
+      <div>0110&nbsp;1011</div>
+      <div>1101&nbsp;0010</div>
+      <Code2 className="ml-auto mt-0.5 h-7 w-7 text-sky-500/30" />
+    </div>
+  );
+}
+function CreativeArt() {
+  return (
+    <svg
+      viewBox="0 0 110 66"
+      className="pointer-events-none absolute right-2 top-1/2 h-full w-28 -translate-y-1/2 text-pink-400/30"
+      aria-hidden
+    >
+      <g stroke="currentColor" strokeWidth="1.3" fill="none">
+        <line x1="22" y1="22" x2="52" y2="12" />
+        <line x1="22" y1="22" x2="46" y2="44" />
+        <line x1="52" y1="12" x2="84" y2="28" />
+        <line x1="46" y1="44" x2="84" y2="28" />
+        <line x1="46" y1="44" x2="72" y2="54" />
+      </g>
+      <g fill="currentColor">
+        <circle cx="22" cy="22" r="4" />
+        <circle cx="52" cy="12" r="4" />
+        <circle cx="46" cy="44" r="4" />
+        <circle cx="72" cy="54" r="3" />
+      </g>
+      <circle cx="84" cy="28" r="5" className="fill-fuchsia-400/50" />
+    </svg>
+  );
+}
+
+const LANE_STYLES: Record<
+  Lane,
+  { gradient: string; ring: string; tile: string; art: React.ReactNode }
+> = {
+  all: {
+    gradient: "from-violet-500/20 via-purple-400/10 to-fuchsia-300/5",
+    ring: "ring-violet-400",
+    tile: "bg-violet-500/20 text-violet-600 dark:text-violet-300",
+    art: <CloudsArt />,
+  },
+  dev: {
+    gradient: "from-sky-500/20 via-blue-400/10 to-cyan-300/5",
+    ring: "ring-sky-400",
+    tile: "bg-sky-500/20 text-sky-600 dark:text-sky-300",
+    art: <CodeArt />,
+  },
+  creative: {
+    gradient: "from-pink-500/20 via-rose-400/10 to-fuchsia-300/5",
+    ring: "ring-pink-400",
+    tile: "bg-pink-500/20 text-pink-600 dark:text-pink-300",
+    art: <CreativeArt />,
+  },
+};
+
 function flatten(nodes: CategoryNode[], depth = 0): { id: string; label: string }[] {
   return nodes.flatMap((n) => [
     { id: n.id, label: `${"— ".repeat(depth)}${n.name}` },
@@ -149,39 +229,35 @@ function PromptsLibrary() {
       </div>
 
       {/* Lane switcher: App Development vs AI & Creative */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {LANES.map((l) => {
           const active = lane === l.value;
           const Icon = l.icon;
+          const s = LANE_STYLES[l.value];
           return (
             <button
               key={l.value}
               onClick={() => changeLane(l.value)}
               aria-pressed={active}
               className={cn(
-                "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                "group relative flex min-h-[76px] items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-r p-4 text-left transition-all",
+                s.gradient,
                 active
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:border-primary/40 hover:bg-accent",
+                  ? cn("border-transparent shadow-md ring-2", s.ring)
+                  : "border-border hover:shadow-sm hover:brightness-[1.02]",
               )}
             >
+              {s.art}
               <span
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                  active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                  "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm",
+                  s.tile,
                 )}
               >
                 <Icon className="h-5 w-5" />
               </span>
-              <span className="min-w-0">
-                <span
-                  className={cn(
-                    "block text-sm font-medium",
-                    active ? "text-primary" : "text-foreground",
-                  )}
-                >
-                  {l.label}
-                </span>
+              <span className="relative min-w-0">
+                <span className="block text-sm font-semibold text-foreground">{l.label}</span>
                 <span className="block truncate text-xs text-muted-foreground">{l.hint}</span>
               </span>
             </button>
