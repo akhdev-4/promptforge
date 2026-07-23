@@ -204,7 +204,7 @@ async def run_prompt_stream(
             async for chunk in provider.stream(rendered):  # type: ignore[attr-defined]
                 yield chunk
         except Exception as exc:  # noqa: BLE001 - surface stream failures inline
-            yield f"\n\n[stream error: {exc}]"
+            yield f"\n\n⚠️ {exc}"
 
     return StreamingResponse(
         gen(),

@@ -20,6 +20,15 @@ _STREAM_ENDPOINT = (
 )
 
 
+def _friendly_error(status: int) -> str:
+    if status in (429, 503):
+        return (
+            "The free Gemini tier is rate-limited or busy right now — "
+            "wait a minute and run it again."
+        )
+    return f"The model returned an error ({status}). Please try again."
+
+
 class GeminiProvider:
     async def run(self, prompt: str) -> RunResult:
         url = _ENDPOINT.format(model=settings.GEMINI_MODEL)
@@ -34,7 +43,7 @@ class GeminiProvider:
             )
 
         if resp.status_code != 200:
-            raise RuntimeError(f"Gemini API error {resp.status_code}: {resp.text[:300]}")
+            raise RuntimeError(_friendly_error(resp.status_code))
 
         data = resp.json()
         try:
@@ -65,8 +74,8 @@ class GeminiProvider:
             ) as resp,
         ):
             if resp.status_code != 200:
-                body = (await resp.aread()).decode("utf-8", "replace")[:200]
-                raise RuntimeError(f"Gemini stream error {resp.status_code}: {body}")
+                await resp.aread()
+                raise RuntimeError(_friendly_error(resp.status_code))
             async for line in resp.aiter_lines():
                 if not line.startswith("data:"):
                     continue
