@@ -227,12 +227,36 @@ export interface PromptDetail extends PromptSummary {
   is_liked: boolean;
   is_bookmarked: boolean;
   my_rating: number | null;
+  team_id: string | null;
 }
 
 export interface RatingResult {
   rating_avg: number;
   rating_count: number;
   my_rating: number | null;
+}
+
+export interface TeamMember {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string;
+}
+
+export interface TeamSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  owner_id: string;
+  created_at: string;
+  member_count: number;
+  is_owner: boolean;
+}
+
+export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
+  members: TeamMember[];
 }
 
 export interface Comment {
@@ -333,6 +357,7 @@ export interface PromptCreateInput {
   category_id?: string | null;
   component_id?: string | null;
   tags?: string[];
+  team_id?: string | null;
 }
 
 export type PromptUpdateInput = Partial<Omit<PromptCreateInput, "content">>;

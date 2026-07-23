@@ -9,6 +9,7 @@ import {
   GitFork,
   Heart,
   Layers,
+  Lock,
   Pencil,
   Play,
   Trash2,
@@ -205,6 +206,11 @@ export default function PromptDetailPage() {
             {prompt.forked_from_id && (
               <Badge variant="outline">
                 <GitFork className="mr-1 h-3 w-3" /> Fork
+              </Badge>
+            )}
+            {prompt.team_id && (
+              <Badge variant="secondary">
+                <Lock className="mr-1 h-3 w-3" /> Private
               </Badge>
             )}
           </div>

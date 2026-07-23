@@ -28,4 +28,5 @@ from app.models.interaction import (  # noqa: F401,E402
 from app.models.project import Component, Module, Project  # noqa: F401,E402
 from app.models.prompt import Prompt, PromptVersion  # noqa: F401,E402
 from app.models.tag import Tag, prompt_tags  # noqa: F401,E402
+from app.models.team import PromptTeam, Team, TeamMember  # noqa: F401,E402
 from app.models.user import User  # noqa: F401,E402

@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import PromptStatus
 from app.models.prompt import Prompt
 from app.models.tag import Tag, prompt_tags
+from app.models.team import PromptTeam
 
 
 class HeuristicRelatedProvider:
@@ -52,6 +53,7 @@ class HeuristicRelatedProvider:
             .where(
                 Prompt.id != prompt.id,
                 Prompt.status == PromptStatus.PUBLISHED,
+                Prompt.id.notin_(select(PromptTeam.prompt_id)),  # exclude private
                 or_(*signals),
             )
             .limit(200)

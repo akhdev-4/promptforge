@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.embedding import PromptEmbedding
 from app.models.enums import PromptStatus
 from app.models.prompt import Prompt
+from app.models.team import PromptTeam
 from app.repositories.base import BaseRepository
 from app.search.embeddings import EMBED_MODEL, embed_text
 
@@ -73,7 +74,9 @@ class SemanticSearchService:
             (
                 await self.session.execute(
                     select(Prompt).where(
-                        Prompt.id.in_(top_ids), Prompt.status == PromptStatus.PUBLISHED
+                        Prompt.id.in_(top_ids),
+                        Prompt.status == PromptStatus.PUBLISHED,
+                        Prompt.id.notin_(select(PromptTeam.prompt_id)),  # exclude private
                     )
                 )
             )

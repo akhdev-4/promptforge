@@ -18,6 +18,7 @@ from app.api.v1.endpoints import (
     projects,
     prompts,
     tags,
+    teams,
     users,
 )
 
@@ -32,3 +33,4 @@ api_router.include_router(projects.router, prefix="/projects", tags=["projects"]
 api_router.include_router(collections.router, prefix="/collections", tags=["collections"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(community.router, tags=["community"])
+api_router.include_router(teams.router, prefix="/teams", tags=["teams"])

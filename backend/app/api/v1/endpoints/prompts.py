@@ -16,6 +16,7 @@ from app.api.deps import (
     require_admin,
     require_contributor,
 )
+from app.core.exceptions import NotFoundError
 from app.models.enums import PromptStatus, PromptType
 from app.models.user import User
 from app.playground import get_run_provider, render_prompt
@@ -39,6 +40,7 @@ from app.schemas.prompt import (
 from app.services.interaction import InteractionService
 from app.services.prompt import PromptService
 from app.services.semantic import SemanticSearchService
+from app.services.team import TeamService
 
 router = APIRouter()
 
@@ -63,8 +65,14 @@ async def create_prompt(
     user: Annotated[User, Depends(require_contributor)],
 ) -> PromptDetail:
     prompt = await PromptService(db).create(data, user)
-    await _embed_best_effort(db, prompt)
-    return PromptDetail.model_validate(prompt)
+    if data.team_id is not None:
+        await TeamService(db).assign_prompt(prompt.id, data.team_id, user)
+    else:
+        # Only public prompts are embedded for search.
+        await _embed_best_effort(db, prompt)
+    detail = PromptDetail.model_validate(prompt)
+    detail.team_id = data.team_id
+    return detail
 
 
 @router.get("", response_model=Page[PromptSummary], summary="List / search prompts")
@@ -139,8 +147,18 @@ async def backfill_embeddings(
 async def get_prompt(
     prompt_id: uuid.UUID, db: DbSession, user: OptionalUser
 ) -> PromptDetail:
+    # Private (team) prompts are visible only to that team's members; otherwise
+    # 404 so we don't reveal their existence.
+    teams = TeamService(db)
+    team_id = await teams.team_of_prompt(prompt_id)
+    if team_id is not None and (
+        user is None or not await teams.is_member(team_id, user.id)
+    ):
+        raise NotFoundError("Prompt not found")
+
     prompt = await PromptService(db).get_detail(prompt_id)
     detail = PromptDetail.model_validate(prompt)
+    detail.team_id = team_id
     if user is not None:
         interactions = InteractionService(db)
         liked, bookmarked = await interactions.flags(user.id, prompt_id)

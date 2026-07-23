@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.enums import PromptStatus, PromptType
 from app.models.prompt import Prompt, PromptVersion
 from app.models.tag import Tag, prompt_tags
+from app.models.team import PromptTeam
 from app.repositories.base import BaseRepository
 
 SortKey = Literal[
@@ -97,6 +98,9 @@ class PromptRepository(BaseRepository[Prompt]):
                 .where(Tag.slug.in_(tag_slugs))
             )
             stmt = stmt.where(Prompt.id.in_(tagged))
+        # Private prompts (assigned to a team) never surface in general
+        # lists/search — only on their team page.
+        stmt = stmt.where(Prompt.id.notin_(select(PromptTeam.prompt_id)))
         return stmt
 
     async def search(

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTeams } from "@/hooks/use-teams";
 import { useCategoryTree, usePopularTags } from "@/hooks/use-taxonomy";
 import {
   complexityOptions,
@@ -43,6 +44,7 @@ const schema = z.object({
   language: z.string().max(60).optional(),
   ai_model: z.string().max(60).optional(),
   category_id: z.string().optional(),
+  team_id: z.string().optional(),
   estimated_tokens: z.string().optional(),
   expected_output: z.string().optional(),
   demo_url: z.url("Must be a URL").optional().or(z.literal("")),
@@ -89,6 +91,7 @@ export function PromptForm({
 }: PromptFormProps) {
   const { data: tree } = useCategoryTree();
   const { data: popularTags } = usePopularTags();
+  const { data: teams } = useTeams();
   const categoryOptions = React.useMemo(() => flattenCategories(tree ?? []), [tree]);
   const [tags, setTags] = React.useState<string[]>(
     initial?.tags.map((t) => t.name) ?? [],
@@ -111,6 +114,7 @@ export function PromptForm({
       language: initial?.language ?? "",
       ai_model: initial?.ai_model ?? "",
       category_id: initial?.category?.id ?? "",
+      team_id: "",
       estimated_tokens:
         initial?.estimated_tokens != null ? String(initial.estimated_tokens) : "",
       expected_output: initial?.expected_output ?? "",
@@ -139,6 +143,7 @@ export function PromptForm({
       ai_model: values.ai_model || null,
       category_id: values.category_id || null,
       component_id: componentId ?? initial?.component?.id ?? null,
+      team_id: mode === "create" ? values.team_id || null : null,
       tags,
       estimated_tokens: Number.isFinite(tokensNum) ? tokensNum : null,
       expected_output: values.expected_output || null,
@@ -226,6 +231,18 @@ export function PromptForm({
               ))}
             </Select>
           </Field>
+          {mode === "create" && teams && teams.length > 0 && (
+            <Field label="Visibility">
+              <Select {...register("team_id")}>
+                <option value="">Public — everyone can see it</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    Private to “{t.name}”
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field label="Tags">
             <TagInput
               value={tags}

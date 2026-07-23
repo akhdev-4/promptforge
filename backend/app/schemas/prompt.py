@@ -80,6 +80,8 @@ class PromptCreate(PromptBase):
     category_id: uuid.UUID | None = None
     component_id: uuid.UUID | None = None
     tags: list[str] = Field(default_factory=list, max_length=20)
+    # If set, the prompt is private to this team (the author must be a member).
+    team_id: uuid.UUID | None = None
 
 
 class PromptUpdate(BaseModel):
@@ -150,6 +152,7 @@ class PromptDetail(PromptSummary):
     is_liked: bool = False
     is_bookmarked: bool = False
     my_rating: int | None = None
+    team_id: uuid.UUID | None = None
 
 
 class RatingCreate(BaseModel):

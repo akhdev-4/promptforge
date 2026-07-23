@@ -10,6 +10,7 @@ import {
   Shield,
   Sparkles,
   Tags,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ export const navSections: NavSection[] = [
     items: [
       { label: "Projects", href: "/projects", icon: FolderKanban },
       { label: "Components", href: "/components", icon: Blocks },
+      { label: "Teams", href: "/teams", icon: Users },
       { label: "Recommendations", href: "/recommendations", icon: Sparkles },
     ],
   },
