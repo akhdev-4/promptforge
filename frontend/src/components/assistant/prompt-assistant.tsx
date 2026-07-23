@@ -92,9 +92,9 @@ export function PromptAssistant() {
     setBusy(false);
   };
 
-  const voice = useSpeechRecognition((text) => {
-    setInput(text);
-    void respond(text);
+  const voice = useSpeechRecognition((text, isFinal) => {
+    setInput(text); // live transcript in the field
+    if (isFinal && text) void respond(text);
   });
 
   if (!mounted || !user) return null;
@@ -223,12 +223,20 @@ export function PromptAssistant() {
           </div>
 
           {/* Input */}
+          {voice.error && (
+            <p className="border-t border-border px-3 pt-2 text-xs text-destructive">
+              {voice.error}
+            </p>
+          )}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               respond(input);
             }}
-            className="flex items-center gap-2 border-t border-border p-2.5"
+            className={cn(
+              "flex items-center gap-2 p-2.5",
+              !voice.error && "border-t border-border",
+            )}
           >
             <input
               value={input}
