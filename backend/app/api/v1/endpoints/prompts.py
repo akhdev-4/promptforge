@@ -12,6 +12,7 @@ from app.api.deps import (
     CurrentUser,
     DbSession,
     OptionalUser,
+    require_admin,
     require_contributor,
 )
 from app.models.enums import PromptStatus, PromptType
@@ -36,6 +37,7 @@ from app.schemas.prompt import (
 )
 from app.services.interaction import InteractionService
 from app.services.prompt import PromptService
+from app.services.semantic import SemanticSearchService
 
 router = APIRouter()
 
@@ -93,6 +95,34 @@ async def list_prompts(
         sort=sort,
     )
     return Page.create([PromptSummary.model_validate(p) for p in items], total, params)
+
+
+@router.get(
+    "/semantic",
+    response_model=list[PromptSummary],
+    summary="Meaning-based search (falls back to keyword search)",
+)
+async def semantic_search(
+    db: DbSession,
+    q: str = Query(..., min_length=1),
+    limit: int = Query(8, ge=1, le=20),
+) -> list[PromptSummary]:
+    results = await SemanticSearchService(db).search(q, limit=limit)
+    if results is None:  # no embeddings / no key -> keyword fallback
+        results, _ = await PromptService(db).search(offset=0, limit=limit, q=q)
+    return [PromptSummary.model_validate(p) for p in results]
+
+
+@router.post(
+    "/embeddings/backfill",
+    dependencies=[Depends(require_admin)],
+    summary="Embed a batch of prompts missing an embedding (admin)",
+)
+async def backfill_embeddings(
+    db: DbSession, limit: int = Query(20, ge=1, le=50)
+) -> dict[str, int]:
+    embedded, remaining = await SemanticSearchService(db).backfill(batch=limit)
+    return {"embedded": embedded, "remaining": remaining}
 
 
 @router.get("/{prompt_id}", response_model=PromptDetail, summary="Get a prompt (counts a view)")

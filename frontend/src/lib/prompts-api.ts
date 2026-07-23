@@ -59,6 +59,13 @@ export const promptsApi = {
   // current user), still works anonymously for public viewers.
   get: (id: string) => apiFetch<PromptDetail>(`/prompts/${id}`),
 
+  // Meaning-based search (embeddings), keyword fallback on the server.
+  semantic: (q: string, limit = 8) =>
+    apiFetch<PromptSummary[]>(
+      `/prompts/semantic?q=${encodeURIComponent(q)}&limit=${limit}`,
+      { auth: false },
+    ),
+
   related: (id: string, limit = 6) =>
     apiFetch<PromptSummary[]>(`/prompts/${id}/related?limit=${limit}`, { auth: false }),
 

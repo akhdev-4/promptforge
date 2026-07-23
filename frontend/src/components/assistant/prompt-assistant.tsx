@@ -6,64 +6,11 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
-import { useCategoryTree } from "@/hooks/use-taxonomy";
 import { promptsApi } from "@/lib/prompts-api";
 import { promptTypeLabels } from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { PromptSummary } from "@/types";
-
-// --- Lightweight intent parsing (no external LLM needed) --------------------
-const STOP = new Set([
-  "i", "a", "an", "the", "to", "for", "of", "and", "or", "need", "want", "looking",
-  "find", "show", "me", "give", "get", "some", "any", "that", "this", "can", "you",
-  "help", "please", "with", "how", "do", "my", "use", "using", "like", "would",
-  "should", "is", "are", "best", "good", "one", "prompt", "prompts", "about", "on",
-  "in", "it", "as", "so", "what", "which", "where", "make", "create", "build",
-  "something", "thing", "please", "app", "website", "site", "page",
-]);
-
-const CREATIVE_HINTS = new Set([
-  "image", "images", "photo", "photos", "picture", "pictures", "portrait", "avatar",
-  "logo", "sticker", "stickers", "anime", "ghibli", "illustration", "art", "artwork",
-  "headshot", "figurine", "wallpaper", "poster", "cartoon", "drawing", "painting",
-  "watercolor", "edit", "editing", "restore", "colorize", "selfie", "instagram",
-  "thumbnail", "cyberpunk", "polaroid", "diorama",
-]);
-
-const DEV_HINTS = new Set([
-  "api", "apis", "login", "auth", "authentication", "jwt", "database", "sql", "schema",
-  "react", "nextjs", "fastapi", "backend", "frontend", "endpoint", "endpoints",
-  "component", "components", "checkout", "cart", "dashboard", "ui", "code", "python",
-  "typescript", "stripe", "webhook", "webhooks", "migration", "test", "tests",
-  "deploy", "deployment", "docker", "admin", "form", "table", "crud", "oauth",
-  "password", "search", "navbar", "header", "footer", "modal",
-]);
-
-function extractKeywords(text: string): string[] {
-  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const w of words) {
-    if (w.length >= 2 && !STOP.has(w) && !seen.has(w)) {
-      seen.add(w);
-      out.push(w);
-    }
-  }
-  return out.slice(0, 5);
-}
-
-function detectLane(words: string[]): "creative" | "dev" | "all" {
-  let c = 0;
-  let d = 0;
-  for (const w of words) {
-    if (CREATIVE_HINTS.has(w)) c++;
-    if (DEV_HINTS.has(w)) d++;
-  }
-  if (c > d && c > 0) return "creative";
-  if (d > 0) return "dev";
-  return "all";
-}
 
 interface Msg {
   id: string;
@@ -80,11 +27,6 @@ const nextId = () => `m${++msgSeq}`;
 
 export function PromptAssistant() {
   const user = useAuthStore((s) => s.user);
-  const { data: tree } = useCategoryTree();
-  const creativeRootId = React.useMemo(
-    () => (tree ?? []).find((n) => n.name === "Creative & Media")?.id,
-    [tree],
-  );
 
   const [mounted, setMounted] = React.useState(false);
   const [open, setOpen] = React.useState(false);
@@ -112,38 +54,8 @@ export function PromptAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  const laneFilter = (lane: "creative" | "dev" | "all") => {
-    if (!creativeRootId) return {};
-    if (lane === "creative") return { category_id: creativeRootId };
-    if (lane === "dev") return { exclude_category_id: creativeRootId };
-    return {};
-  };
-
-  const search = async (
-    keywords: string[],
-    filter: { category_id?: string; exclude_category_id?: string },
-  ): Promise<PromptSummary[]> => {
-    const pages = await Promise.all(
-      keywords.map((k) =>
-        promptsApi.list({ q: k, size: 6, sort: "most_copied", ...filter }).catch(() => ({
-          items: [] as PromptSummary[],
-        })),
-      ),
-    );
-    // Rank by how many keywords surfaced each prompt, then by popularity.
-    const score = new Map<string, { hits: number; prompt: PromptSummary }>();
-    for (const page of pages) {
-      for (const p of page.items) {
-        const e = score.get(p.id) ?? { hits: 0, prompt: p };
-        e.hits += 1;
-        score.set(p.id, e);
-      }
-    }
-    return [...score.values()]
-      .sort((a, b) => b.hits - a.hits || b.prompt.copies_count - a.prompt.copies_count)
-      .slice(0, 4)
-      .map((e) => e.prompt);
-  };
+  const bot = (text: string, results?: PromptSummary[]) =>
+    setMessages((m) => [...m, { id: nextId(), role: "bot", text, results }]);
 
   const respond = async (text: string) => {
     const clean = text.trim();
@@ -153,59 +65,28 @@ export function PromptAssistant() {
     setBusy(true);
 
     const words = clean.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
-    const keywords = extractKeywords(clean);
-
-    // Pure greeting / no searchable terms.
-    if (keywords.length === 0) {
-      const isGreeting = words.some((w) => GREETINGS.has(w));
-      setMessages((m) => [
-        ...m,
-        {
-          id: nextId(),
-          role: "bot",
-          text: isGreeting
-            ? "Hey! Describe the prompt you're after — mention a feature or technology (e.g. “passwordless login”, “product catalog API”, “Ghibli portrait”) and I'll find it."
-            : "Tell me a bit more — a feature, technology, or style works best (e.g. “cart drawer”, “Stripe checkout”, “anime avatar”).",
-        },
-      ]);
+    if (clean.length < 3 || (words.length === 1 && GREETINGS.has(words[0]!))) {
+      bot(
+        "Describe what you need — a feature, technology, or style works great (e.g. “passwordless login”, “cart drawer”, “Ghibli portrait”) — and I'll find the closest prompts.",
+      );
       setBusy(false);
       return;
     }
 
-    const lane = detectLane(words);
-    let results = await search(keywords, laneFilter(lane));
-    // Broaden if a scoped lane found nothing.
-    if (results.length === 0 && lane !== "all") {
-      results = await search(keywords, {});
-    }
-
-    if (results.length === 0) {
-      setMessages((m) => [
-        ...m,
-        {
-          id: nextId(),
-          role: "bot",
-          text: `I couldn't find a close match for “${clean}”. Try naming a specific feature or technology — like “login”, “checkout”, “dashboard”, or “portrait”.`,
-        },
-      ]);
-    } else {
-      const laneNote =
-        lane === "creative"
-          ? " from the AI & Creative library"
-          : lane === "dev"
-            ? " from the App Development library"
-            : "";
-      setMessages((m) => [
-        ...m,
-        {
-          id: nextId(),
-          role: "bot",
-          text: `Here ${results.length === 1 ? "is" : "are"} ${results.length} prompt${
+    try {
+      const results = await promptsApi.semantic(clean, 4);
+      if (results.length === 0) {
+        bot(`I couldn't find a close match for “${clean}”. Try describing it a different way.`);
+      } else {
+        bot(
+          `Here ${results.length === 1 ? "is" : "are"} ${results.length} prompt${
             results.length === 1 ? "" : "s"
-          }${laneNote} that match. Tap one to open it:`,
+          } that match. Tap one to open it:`,
           results,
-        },
-      ]);
+        );
+      }
+    } catch {
+      bot("Something went wrong searching just now — please try again.");
     }
     setBusy(false);
   };
