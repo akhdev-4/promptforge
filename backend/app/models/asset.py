@@ -39,7 +39,9 @@ class PromptAsset(UUIDMixin, TimestampMixin, Base):
         Enum(AssetKind, native_enum=False, length=20, validate_strings=True),
         nullable=False,
     )
-    url: Mapped[str | None] = mapped_column(String(1000))
+    # Text (not String(1000)) so it can also hold an inline data: URL for images
+    # uploaded/pasted from the user's device (compressed client-side).
+    url: Mapped[str | None] = mapped_column(Text)
     content: Mapped[str | None] = mapped_column(Text)  # inline HTML/code
     language: Mapped[str | None] = mapped_column(String(40))  # for code previews
     caption: Mapped[str | None] = mapped_column(String(300))

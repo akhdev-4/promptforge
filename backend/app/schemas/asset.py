@@ -15,7 +15,8 @@ _CONTENT_KINDS = {AssetKind.GENERATED_HTML, AssetKind.GENERATED_CODE}
 
 class AssetCreate(BaseModel):
     kind: AssetKind
-    url: str | None = Field(default=None, max_length=1000)
+    # No length cap — may hold a compressed inline data: URL (uploaded image).
+    url: str | None = None
     content: str | None = None
     language: str | None = Field(default=None, max_length=40)
     caption: str | None = Field(default=None, max_length=300)
