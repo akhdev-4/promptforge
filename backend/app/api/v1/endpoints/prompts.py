@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import uuid
 from typing import Annotated
 
@@ -42,6 +43,14 @@ from app.services.semantic import SemanticSearchService
 router = APIRouter()
 
 
+async def _embed_best_effort(db: DbSession, prompt) -> None:
+    """Compute a prompt's semantic embedding for search, isolated in a savepoint
+    so a failure (rate limit, no key) never breaks the create/update request."""
+    with contextlib.suppress(Exception):
+        async with db.begin_nested():
+            await SemanticSearchService(db).reembed(prompt)
+
+
 @router.post(
     "",
     response_model=PromptDetail,
@@ -54,6 +63,7 @@ async def create_prompt(
     user: Annotated[User, Depends(require_contributor)],
 ) -> PromptDetail:
     prompt = await PromptService(db).create(data, user)
+    await _embed_best_effort(db, prompt)
     return PromptDetail.model_validate(prompt)
 
 
@@ -160,6 +170,7 @@ async def update_prompt(
     prompt_id: uuid.UUID, data: PromptUpdate, db: DbSession, user: CurrentUser
 ) -> PromptDetail:
     prompt = await PromptService(db).update_metadata(prompt_id, data, user)
+    await _embed_best_effort(db, prompt)
     return PromptDetail.model_validate(prompt)
 
 
