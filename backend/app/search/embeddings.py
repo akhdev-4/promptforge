@@ -7,7 +7,7 @@ import httpx
 
 from app.core.config import settings
 
-_MODEL = "text-embedding-004"
+_MODEL = "gemini-embedding-001"
 _ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{_MODEL}:embedContent"
 
 EMBED_MODEL = _MODEL
