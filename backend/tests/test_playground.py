@@ -83,6 +83,33 @@ async def test_run_image_mode_returns_image_url(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_run_stream_demo(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    prompt = (
+        await client.post(
+            PROMPTS,
+            json={
+                "title": "Stream me",
+                "content": "Say hello to {{name}}",
+                "prompt_type": "other",
+                "complexity": "beginner",
+                "status": "published",
+            },
+            headers=headers,
+        )
+    ).json()
+
+    resp = await client.post(
+        f"{PROMPTS}/{prompt['id']}/run/stream",
+        json={"variables": {"name": "Ada"}},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    assert "Demo mode" in resp.text  # mock provider streamed its text
+    assert "Ada" in resp.text  # variable substituted into the streamed prompt
+
+
+@pytest.mark.asyncio
 async def test_run_requires_auth(client: AsyncClient) -> None:
     _, headers = await make_user(client)
     prompt = (

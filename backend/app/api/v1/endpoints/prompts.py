@@ -6,6 +6,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 
 from app.api.deps import (
     CurrentUser,
@@ -187,6 +188,28 @@ async def run_prompt(
         model=result.model,
         is_demo=result.is_demo,
         image_url=result.image_url,
+    )
+
+
+@router.post("/{prompt_id}/run/stream", summary="Run a prompt with streamed text output")
+async def run_prompt_stream(
+    prompt_id: uuid.UUID, data: PlaygroundRunRequest, db: DbSession, user: CurrentUser
+) -> StreamingResponse:
+    prompt = await PromptService(db).get_detail(prompt_id, count_view=False)
+    rendered = render_prompt(prompt.content, data.variables)
+    provider = get_run_provider("text")
+
+    async def gen():
+        try:
+            async for chunk in provider.stream(rendered):  # type: ignore[attr-defined]
+                yield chunk
+        except Exception as exc:  # noqa: BLE001 - surface stream failures inline
+            yield f"\n\n[stream error: {exc}]"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/plain; charset=utf-8",
+        headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"},
     )
 
 

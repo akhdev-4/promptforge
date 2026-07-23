@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRunPrompt } from "@/hooks/use-playground";
-import { ApiError } from "@/lib/api";
-import type { RunMode } from "@/lib/playground-api";
+import { type RunMode, streamRun } from "@/lib/playground-api";
 import { cn } from "@/lib/utils";
 
 const VAR_RE = /\{\{\s*([\w.\-]+)\s*\}\}/g;
@@ -36,35 +35,74 @@ export function Playground({
   promptId: string;
   content: string;
   defaultMode?: RunMode;
-  /** Whether the Image (generation) mode is offered — only for image prompts. */
   allowImage?: boolean;
 }) {
   const vars = React.useMemo(() => extractVars(content), [content]);
   const [values, setValues] = React.useState<Record<string, string>>({});
   const [mode, setMode] = React.useState<RunMode>(allowImage ? defaultMode : "text");
   const [copied, setCopied] = React.useState(false);
+
+  // Text mode = streaming; image mode = one-shot mutation.
+  const [streamText, setStreamText] = React.useState("");
+  const [streaming, setStreaming] = React.useState(false);
+  const [streamError, setStreamError] = React.useState<string | null>(null);
+  const abortRef = React.useRef<AbortController | null>(null);
+
   const [imgLoading, setImgLoading] = React.useState(false);
-  const run = useRunPrompt(promptId);
-  const result = run.data;
+  const image = useRunPrompt(promptId);
+
+  React.useEffect(() => () => abortRef.current?.abort(), []);
 
   const changeMode = (next: RunMode) => {
     if (next === mode) return;
+    abortRef.current?.abort();
     setMode(next);
-    run.reset();
+    setStreamText("");
+    setStreamError(null);
+    setStreaming(false);
     setImgLoading(false);
+    image.reset();
+  };
+
+  const runText = async () => {
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    setStreamText("");
+    setStreamError(null);
+    setStreaming(true);
+    try {
+      await streamRun(promptId, values, (chunk) => setStreamText((t) => t + chunk), ctrl.signal);
+    } catch (err) {
+      if (!ctrl.signal.aborted) {
+        setStreamError(err instanceof Error ? err.message : "Something went wrong.");
+      }
+    } finally {
+      if (abortRef.current === ctrl) {
+        setStreaming(false);
+        abortRef.current = null;
+      }
+    }
   };
 
   const onRun = () => {
-    if (mode === "image") setImgLoading(true);
-    run.mutate({ variables: values, mode });
+    if (mode === "image") {
+      setImgLoading(true);
+      image.mutate({ variables: values, mode: "image" });
+    } else {
+      void runText();
+    }
   };
 
   const copy = async () => {
-    if (!result) return;
-    await navigator.clipboard.writeText(result.output);
+    if (!streamText) return;
+    await navigator.clipboard.writeText(streamText);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const imgResult = image.data;
+  const busy = streaming || image.isPending;
 
   return (
     <div className="space-y-4">
@@ -75,7 +113,6 @@ export function Playground({
         <p className="mt-1 text-xs text-muted-foreground">See what this prompt produces.</p>
       </div>
 
-      {/* Text / Image mode toggle — only for image prompts */}
       {allowImage && (
         <div className="inline-flex rounded-lg border border-border p-0.5">
           {(
@@ -125,27 +162,24 @@ export function Playground({
         </div>
       )}
 
-      <Button onClick={onRun} disabled={run.isPending}>
-        {run.isPending ? (
+      <Button onClick={onRun} disabled={busy}>
+        {busy ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : mode === "image" ? (
           <ImageIcon className="h-4 w-4" />
         ) : (
           <Play className="h-4 w-4" />
         )}
-        {run.isPending ? "Running…" : mode === "image" ? "Generate image" : "Run prompt"}
+        {busy ? "Running…" : mode === "image" ? "Generate image" : "Run prompt"}
       </Button>
 
-      {run.isError && (
+      {/* Image result */}
+      {mode === "image" && image.isError && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {run.error instanceof ApiError
-            ? run.error.message
-            : "Something went wrong running the prompt."}
+          Couldn&rsquo;t generate the image. Try again.
         </p>
       )}
-
-      {/* Image result */}
-      {result?.image_url && (
+      {mode === "image" && imgResult?.image_url && (
         <div className="space-y-2">
           <div className="relative flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40">
             {imgLoading && (
@@ -155,7 +189,7 @@ export function Playground({
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={result.image_url}
+              src={imgResult.image_url}
               alt="Generated result"
               className={cn("max-h-[440px] w-auto", imgLoading && "opacity-0")}
               onLoad={() => setImgLoading(false)}
@@ -165,7 +199,7 @@ export function Playground({
           <div className="flex items-center justify-between">
             <Badge variant="secondary">pollinations · free</Badge>
             <a
-              href={result.image_url}
+              href={imgResult.image_url}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
@@ -176,32 +210,31 @@ export function Playground({
         </div>
       )}
 
-      {/* Text result */}
-      {result && !result.image_url && (
+      {/* Text (streamed) result */}
+      {mode === "text" && streamError && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {streamError}
+        </p>
+      )}
+      {mode === "text" && (streaming || streamText) && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">Output</span>
-              {result.is_demo ? (
-                <Badge variant="warning">Demo</Badge>
-              ) : (
-                <Badge variant="secondary">{result.model ?? result.provider}</Badge>
+              {streaming && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> streaming…
+                </span>
               )}
             </div>
-            <Button variant="ghost" size="sm" onClick={copy}>
+            <Button variant="ghost" size="sm" onClick={copy} disabled={!streamText}>
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? "Copied" : "Copy"}
             </Button>
           </div>
           <div className="max-h-[480px] overflow-auto rounded-xl border border-border bg-muted/40 p-4 text-sm">
-            <MarkdownView content={result.output} />
+            <MarkdownView content={streamText || "…"} />
           </div>
-          {result.is_demo && (
-            <p className="text-xs text-muted-foreground">
-              This is placeholder output. Connect a Gemini key on the backend to see real
-              results here — no code change needed.
-            </p>
-          )}
         </div>
       )}
     </div>

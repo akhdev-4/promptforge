@@ -66,10 +66,12 @@ class Settings(BaseSettings):
     LLM_PROVIDER: Literal["mock", "gemini"] = "mock"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-flash-latest"
-    # Capped to fit the hosting request timeout (~15s): bigger outputs don't
-    # finish synchronously and the gateway 502s. Streaming is the real fix for
-    # longer generations.
+    # Non-streaming runs are capped to fit the hosting request timeout (~20s):
+    # a buffered response that takes longer 502s at the gateway.
     PLAYGROUND_MAX_TOKENS: int = 2048
+    # Streaming keeps the connection producing bytes, so it dodges the idle
+    # timeout and can generate much more.
+    PLAYGROUND_STREAM_MAX_TOKENS: int = 8192
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
