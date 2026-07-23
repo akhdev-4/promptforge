@@ -63,6 +63,7 @@ export function AssetManager({ promptId }: { promptId: string }) {
   const [error, setError] = React.useState<string | null>(null);
   const [processing, setProcessing] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
+  const textFileRef = React.useRef<HTMLInputElement>(null);
 
   const isUrl = URL_KINDS.includes(kind);
   const canUpload = IMAGE_KINDS.includes(kind);
@@ -88,6 +89,18 @@ export function AssetManager({ promptId }: { promptId: string }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (file) void processFile(file);
+  };
+
+  // Read a text file (.html / code) straight into the inline content box.
+  const onTextFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => setContent(String(reader.result ?? ""));
+    reader.onerror = () => setError("Could not read the file.");
+    reader.readAsText(file);
   };
 
   const onPaste = (e: React.ClipboardEvent) => {
@@ -210,12 +223,38 @@ export function AssetManager({ promptId }: { promptId: string }) {
                 </div>
               )}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>{kind === "generated_html" ? "HTML" : "Code"}</Label>
+                <div className="flex items-center justify-between">
+                  <Label>{kind === "generated_html" ? "HTML" : "Code"}</Label>
+                  <input
+                    ref={textFileRef}
+                    type="file"
+                    accept={
+                      kind === "generated_html"
+                        ? ".html,.htm,text/html"
+                        : ".js,.jsx,.ts,.tsx,.py,.css,.json,.txt"
+                    }
+                    className="hidden"
+                    onChange={onTextFile}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => textFileRef.current?.click()}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload {kind === "generated_html" ? ".html" : ""} file
+                  </Button>
+                </div>
                 <Textarea
                   className="min-h-32 font-mono text-xs"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder={kind === "generated_html" ? "<!doctype html>…" : "// code…"}
+                  placeholder={
+                    kind === "generated_html"
+                      ? "Paste HTML or upload a .html file…"
+                      : "Paste code or upload a file…"
+                  }
                 />
               </div>
             </>
