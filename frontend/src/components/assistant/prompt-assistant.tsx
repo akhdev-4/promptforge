@@ -1,11 +1,12 @@
 "use client";
 
-import { Loader2, Play, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Mic, Play, Send, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
+import { useSpeechRecognition } from "@/hooks/use-speech";
 import { promptsApi } from "@/lib/prompts-api";
 import { promptTypeLabels } from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,11 @@ export function PromptAssistant() {
     }
     setBusy(false);
   };
+
+  const voice = useSpeechRecognition((text) => {
+    setInput(text);
+    void respond(text);
+  });
 
   if (!mounted || !user) return null;
 
@@ -227,9 +233,25 @@ export function PromptAssistant() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe the prompt you need…"
+              placeholder={voice.listening ? "Listening…" : "Describe the prompt you need…"}
               className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+            {voice.supported && (
+              <button
+                type="button"
+                onClick={() => (voice.listening ? voice.stop() : voice.start())}
+                aria-label={voice.listening ? "Stop listening" : "Search by voice"}
+                title={voice.listening ? "Stop listening" : "Search by voice"}
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                  voice.listening
+                    ? "animate-pulse border-destructive bg-destructive/10 text-destructive"
+                    : "border-input text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="submit"
               disabled={busy || !input.trim()}
