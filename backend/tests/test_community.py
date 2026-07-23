@@ -74,6 +74,27 @@ async def test_comment_flow_and_notifies_author(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_only_author_can_delete_comment(client: AsyncClient, db_session) -> None:
+    _, author = await make_user(client)
+    prompt = await _make_prompt(client, author)
+    commenter, c_headers = await make_user(client)
+    mod, m_headers = await make_user(client)
+    await _elevate(db_session, mod["id"], UserRole.MODERATOR)
+
+    cid = (
+        await client.post(
+            f"{PROMPTS}/{prompt['id']}/comments", json={"body": "mine"}, headers=c_headers
+        )
+    ).json()["id"]
+
+    # Neither a moderator nor the prompt's author may delete someone else's comment.
+    assert (await client.delete(f"/api/v1/comments/{cid}", headers=m_headers)).status_code == 403
+    assert (await client.delete(f"/api/v1/comments/{cid}", headers=author)).status_code == 403
+    # Only the comment's own author can.
+    assert (await client.delete(f"/api/v1/comments/{cid}", headers=c_headers)).status_code == 204
+
+
+@pytest.mark.asyncio
 async def test_report_and_moderation(client: AsyncClient, db_session) -> None:
     author, a_headers = await make_user(client)
     prompt = await _make_prompt(client, a_headers)

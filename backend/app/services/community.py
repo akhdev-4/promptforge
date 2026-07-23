@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.models.community import PromptComment, PromptReport
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.repositories.base import BaseRepository
 from app.repositories.prompt import PromptRepository
 from app.services.notification import NotificationService
@@ -53,8 +53,9 @@ class CommentService:
         comment = await self.comments.get(comment_id)
         if comment is None:
             raise NotFoundError("Comment not found")
-        if comment.author_id != user.id and not user.role.satisfies(UserRole.MODERATOR):
-            raise PermissionDeniedError("You cannot delete this comment")
+        # Only the comment's own author may delete it — no one else.
+        if comment.author_id != user.id:
+            raise PermissionDeniedError("You can only delete your own comment")
         await self.comments.delete(comment)
 
 

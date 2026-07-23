@@ -21,7 +21,6 @@ export function Comments({ promptId }: { promptId: string }) {
   const add = useAddComment(promptId);
   const del = useDeleteComment(promptId);
   const [body, setBody] = React.useState("");
-  const canModerate = user?.role === "moderator" || user?.role === "administrator";
 
   const submit = async () => {
     if (!body.trim() || add.isPending) return;
@@ -81,12 +80,12 @@ export function Comments({ promptId }: { promptId: string }) {
                     {c.author.full_name ?? c.author.username ?? "User"}
                   </span>
                   <span className="text-xs text-muted-foreground">{formatDate(c.created_at)}</span>
-                  {(user?.id === c.author.id || canModerate) && (
+                  {user?.id === c.author.id && (
                     <button
                       onClick={() => del.mutate(c.id)}
                       className="ml-auto text-muted-foreground hover:text-destructive"
                       aria-label="Delete comment"
-                      title="Delete comment"
+                      title="Delete your comment"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

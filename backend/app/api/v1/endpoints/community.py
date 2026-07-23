@@ -56,7 +56,7 @@ async def add_comment(
     "/comments/{comment_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["comments"],
-    summary="Delete a comment (author or moderator)",
+    summary="Delete your own comment",
 )
 async def delete_comment(comment_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
     await CommentService(db).delete(comment_id, user)
