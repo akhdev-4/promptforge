@@ -235,6 +235,31 @@ export interface RatingResult {
   my_rating: number | null;
 }
 
+export interface Comment {
+  id: string;
+  body: string;
+  author: { id: string; username: string | null; full_name: string | null; avatar_url: string | null };
+  created_at: string;
+}
+
+export interface Report {
+  id: string;
+  reason: string;
+  status: "open" | "resolved" | "dismissed";
+  prompt: { id: string; title: string; slug: string };
+  reporter: { id: string; username: string | null } | null;
+  created_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  message: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface PlaygroundRunResult {
   output: string;
   rendered_prompt: string;

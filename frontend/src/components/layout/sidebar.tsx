@@ -6,9 +6,12 @@ import { Logo } from "@/components/brand/logo";
 
 import { navSections } from "@/config/nav";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const role = useAuthStore((s) => s.user?.role);
+  const canModerate = role === "moderator" || role === "administrator";
 
   return (
     <aside
@@ -29,7 +32,9 @@ export function Sidebar({ className }: { className?: string }) {
               {section.title}
             </p>
             <ul className="space-y-1">
-              {section.items.map((item) => {
+              {section.items
+                .filter((item) => !item.moderatorOnly || canModerate)
+                .map((item) => {
                 const active =
                   pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const Icon = item.icon;

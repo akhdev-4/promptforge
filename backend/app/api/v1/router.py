@@ -13,6 +13,7 @@ from app.api.v1.endpoints import (
     auth,
     categories,
     collections,
+    community,
     health,
     projects,
     prompts,
@@ -30,3 +31,4 @@ api_router.include_router(tags.router, prefix="/tags", tags=["tags"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(collections.router, prefix="/collections", tags=["collections"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+api_router.include_router(community.router, tags=["community"])

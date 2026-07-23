@@ -23,8 +23,10 @@ import { CodeView } from "@/components/prompts/code-view";
 import { CopyButton } from "@/components/prompts/copy-button";
 import { LivePreview } from "@/components/prompts/live-preview";
 import { MarkdownView } from "@/components/prompts/markdown-view";
+import { Comments } from "@/components/prompts/comments";
 import { Playground } from "@/components/prompts/playground";
 import { PreviewGallery } from "@/components/prompts/preview-gallery";
+import { ReportButton } from "@/components/prompts/report-button";
 import { VersionDiff } from "@/components/prompts/version-diff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -371,6 +373,7 @@ export default function PromptDetailPage() {
               <GitFork className="h-4 w-4" /> Fork
             </Button>
           )}
+          {user && !isOwner && <ReportButton promptId={prompt.id} />}
           {canEdit && (
             <Button variant="outline" asChild>
               <Link href={`/prompts/${prompt.id}/edit`}>
@@ -456,6 +459,8 @@ export default function PromptDetailPage() {
                   </CardContent>
                 </Card>
               )}
+
+              <Comments promptId={prompt.id} />
             </div>
           )}
 

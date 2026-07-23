@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.deps import CurrentUser, DbSession, require_admin
 from app.core.exceptions import ConflictError, NotFoundError
 from app.models.user import User
 from app.repositories.user import UserRepository
 from app.schemas.common import Page, PageParams
+from app.schemas.community import NotificationRead, UnreadCount
 from app.schemas.prompt import PromptSummary
 from app.schemas.recommendation import RecommendationItem
 from app.schemas.user import UserPublic, UserRead, UserUpdate
 from app.services.interaction import InteractionService
+from app.services.notification import NotificationService
 from app.services.recommendation import RecommendationService
 
 router = APIRouter()
@@ -58,6 +60,36 @@ async def my_recommendations(
         RecommendationItem(reason=r.reason, prompt=PromptSummary.model_validate(r.prompt))
         for r in recs
     ]
+
+
+@router.get(
+    "/me/notifications",
+    response_model=list[NotificationRead],
+    summary="Recent notifications for the current user",
+)
+async def my_notifications(
+    db: DbSession, user: CurrentUser, limit: int = Query(30, ge=1, le=50)
+) -> list[NotificationRead]:
+    items = await NotificationService(db).list(user.id, limit=limit)
+    return [NotificationRead.model_validate(n) for n in items]
+
+
+@router.get(
+    "/me/notifications/unread-count",
+    response_model=UnreadCount,
+    summary="Unread notification count",
+)
+async def unread_notifications(db: DbSession, user: CurrentUser) -> UnreadCount:
+    return UnreadCount(unread=await NotificationService(db).unread_count(user.id))
+
+
+@router.post(
+    "/me/notifications/read",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Mark all notifications read",
+)
+async def mark_notifications_read(db: DbSession, user: CurrentUser) -> None:
+    await NotificationService(db).mark_all_read(user.id)
 
 
 @router.patch("/me", response_model=UserRead, summary="Update the current user")

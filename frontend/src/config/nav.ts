@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Library,
   Settings,
+  Shield,
   Sparkles,
   Tags,
   type LucideIcon,
@@ -18,6 +19,8 @@ export interface NavItem {
   icon: LucideIcon;
   /** Feature not built yet — shown but flagged. */
   soon?: boolean;
+  /** Only visible to moderators/admins. */
+  moderatorOnly?: boolean;
 }
 
 export interface NavSection {
@@ -51,6 +54,7 @@ export const navSections: NavSection[] = [
     title: "Insights",
     items: [
       { label: "Analytics", href: "/analytics", icon: BarChart3 },
+      { label: "Moderation", href: "/moderation", icon: Shield, moderatorOnly: true },
       { label: "Settings", href: "/settings", icon: Settings },
     ],
   },

@@ -14,6 +14,11 @@ from app.db.base_class import Base  # noqa: F401
 from app.models.asset import PromptAsset  # noqa: F401,E402
 from app.models.category import Category  # noqa: F401,E402
 from app.models.collection import Collection, CollectionItem  # noqa: F401,E402
+from app.models.community import (  # noqa: F401,E402
+    Notification,
+    PromptComment,
+    PromptReport,
+)
 from app.models.embedding import PromptEmbedding  # noqa: F401,E402
 from app.models.interaction import (  # noqa: F401,E402
     PromptBookmark,
