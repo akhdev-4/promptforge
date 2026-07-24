@@ -312,3 +312,41 @@ body {
     animation: none;
   }
 }
+
+/* --- Onboarding animated scenes --- */
+@keyframes pf-fly-in {
+  from { opacity: 0; transform: translate(-42px, 10px) scale(0.9) rotate(-6deg); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pf-grow-up {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes pf-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pf-drop {
+  0% { opacity: 0; transform: translateY(-32px) scale(0.96); }
+  70% { transform: translateY(3px) scale(1.02); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes pf-float2 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes pf-twinkle2 {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.pf-fly { animation: pf-fly-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.pf-grow { animation: pf-grow-up 0.6s ease both; transform-origin: bottom; }
+.pf-drop { animation: pf-drop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.pf-float2 { animation: pf-float2 3s ease-in-out infinite; }
+.pf-twinkle2 { animation: pf-twinkle2 1.8s ease-in-out infinite; }
+.pf-draw { stroke-dasharray: 240; stroke-dashoffset: 240; animation: pf-draw 1.3s ease 0.2s forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .pf-fly, .pf-grow, .pf-drop, .pf-float2, .pf-twinkle2, .pf-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
