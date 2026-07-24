@@ -115,7 +115,7 @@ export function OnboardingTour() {
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={finish} />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         <button
           onClick={finish}
           aria-label="Skip"
@@ -127,19 +127,21 @@ export function OnboardingTour() {
         {/* Animated scene */}
         <div
           key={`scene-${step}`}
-          className="relative h-52 w-full overflow-hidden border-b border-border bg-gradient-to-b from-primary/10 via-primary/5 to-transparent"
+          className="relative h-64 w-full overflow-hidden border-b border-border bg-gradient-to-b from-primary/10 via-primary/5 to-transparent"
         >
           <OnboardingScene index={step} />
         </div>
 
         {/* Content */}
-        <div key={`body-${step}`} className="pf-onb-in space-y-2 px-6 pb-1 pt-5 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">{s.title}</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+        <div key={`body-${step}`} className="pf-onb-in space-y-2.5 px-8 pb-1 pt-6 text-center">
+          <h2 className="text-2xl font-semibold tracking-tight">{s.title}</h2>
+          <p className="mx-auto max-w-md text-[0.95rem] leading-relaxed text-muted-foreground">
+            {s.body}
+          </p>
         </div>
 
         {/* Progress dots */}
-        <div className="flex items-center justify-center gap-1.5 py-4">
+        <div className="flex items-center justify-center gap-1.5 py-5">
           {STEPS.map((_, i) => (
             <span
               key={i}

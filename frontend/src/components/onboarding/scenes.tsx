@@ -60,40 +60,48 @@ function Dashboard() {
   );
 }
 
-function Mascot() {
+function Mascot({ className }: { className?: string }) {
   return (
-    <svg width="76" height="98" viewBox="0 0 76 98" fill="none" aria-hidden>
+    <svg viewBox="0 0 120 172" fill="none" className={className} aria-hidden>
       <defs>
-        <linearGradient id="pf-masc" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="pf-shirt" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#8b5cf6" />
           <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
       </defs>
+      <ellipse cx="60" cy="166" rx="32" ry="5" fill="#00000012" />
       {/* legs */}
-      <rect x="28" y="74" width="7" height="18" rx="3.5" fill="#6d28d9" />
-      <rect x="39" y="74" width="7" height="18" rx="3.5" fill="#6d28d9" />
-      {/* body */}
-      <rect x="23" y="44" width="28" height="36" rx="12" fill="url(#pf-masc)" />
+      <rect x="50" y="108" width="12" height="48" rx="6" fill="#3730a3" />
+      <rect x="63" y="108" width="12" height="48" rx="6" fill="#3730a3" />
+      {/* shoes */}
+      <path d="M45 153 h15 v6 a3 3 0 0 1-3 3 h-16 v-2 q0-7 4-7z" fill="#111827" />
+      <path d="M60 153 h15 v6 a3 3 0 0 1-3 3 h-16 v-2 q0-7 4-7z" fill="#111827" />
       {/* back arm */}
-      <rect x="20" y="48" width="7" height="18" rx="3.5" fill="#7c3aed" />
-      {/* head */}
-      <circle cx="37" cy="27" r="15" fill="url(#pf-masc)" />
-      <circle cx="32" cy="25" r="2.3" fill="#fff" />
-      <circle cx="42" cy="25" r="2.3" fill="#fff" />
-      <path d="M32 32q5 4 10 0" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
-      {/* front arm holding a card stack */}
-      <rect
-        x="46"
-        y="48"
-        width="7"
-        height="17"
-        rx="3.5"
-        fill="#7c3aed"
-        transform="rotate(-22 49 52)"
+      <rect x="31" y="68" width="11" height="33" rx="5.5" fill="#7c3aed" />
+      <circle cx="36.5" cy="101" r="5.5" fill="#f0c29a" />
+      {/* torso */}
+      <path d="M41 66 q19 -9 38 0 l4 44 q-23 7 -46 0 z" fill="url(#pf-shirt)" />
+      {/* neck + head */}
+      <rect x="53" y="50" width="14" height="13" rx="3" fill="#e3ab7d" />
+      <circle cx="60" cy="38" r="18" fill="#f0c29a" />
+      <circle cx="42.5" cy="39" r="3" fill="#f0c29a" />
+      <circle cx="77.5" cy="39" r="3" fill="#f0c29a" />
+      {/* hair */}
+      <path
+        d="M42 39 a18 18 0 0 1 36 0 q1-8-4-12 q-5 4-14 4 t-14-4 q-5 4-4 12z"
+        fill="#2b2b31"
       />
-      <g>
-        <rect x="52" y="47" width="15" height="11" rx="2" fill="#fff" stroke="#e5e7eb" />
-        <rect x="54" y="43" width="15" height="11" rx="2" fill="#fff" stroke="#e5e7eb" />
+      {/* face */}
+      <circle cx="53" cy="39" r="2.2" fill="#2b3648" />
+      <circle cx="67" cy="39" r="2.2" fill="#2b3648" />
+      <path d="M54 46 q6 5 12 0" stroke="#2b3648" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* front arm holding the prompt cards */}
+      <rect x="72" y="66" width="11" height="24" rx="5.5" fill="#7c3aed" transform="rotate(28 77 70)" />
+      <rect x="78" y="70" width="10" height="22" rx="5" fill="#f0c29a" transform="rotate(-22 83 82)" />
+      <g transform="rotate(-8 84 76)">
+        <rect x="70" y="70" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
+        <rect x="73" y="66" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
+        <rect x="74" y="70" width="12" height="2.5" rx="1" fill="#7c3aed99" />
       </g>
     </svg>
   );
@@ -105,7 +113,7 @@ function LibraryScene() {
       {/* Character walks in and "delivers" the prompts */}
       <div className="pf-walk shrink-0">
         <div className="pf-float2">
-          <Mascot />
+          <Mascot className="h-44 w-auto" />
         </div>
       </div>
       {/* Prompts fly into organized shelves as the mascot arrives */}
