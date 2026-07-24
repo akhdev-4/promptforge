@@ -62,50 +62,65 @@ function Dashboard() {
 
 function Mascot({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 120 172" fill="none" className={className} aria-hidden>
+    <svg viewBox="0 0 120 168" fill="none" className={className} aria-hidden>
       <defs>
         <linearGradient id="pf-shirt" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#8b5cf6" />
           <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
       </defs>
-      <ellipse cx="60" cy="166" rx="32" ry="5" fill="#00000012" />
-      {/* legs */}
-      <rect x="50" y="108" width="12" height="48" rx="6" fill="#3730a3" />
-      <rect x="63" y="108" width="12" height="48" rx="6" fill="#3730a3" />
-      {/* shoes */}
-      <path d="M45 153 h15 v6 a3 3 0 0 1-3 3 h-16 v-2 q0-7 4-7z" fill="#111827" />
-      <path d="M60 153 h15 v6 a3 3 0 0 1-3 3 h-16 v-2 q0-7 4-7z" fill="#111827" />
+      <ellipse cx="60" cy="162" rx="30" ry="5" fill="#00000012" />
+      {/* joggers */}
+      <path d="M49 104 h12 v38 q0 4-4 4 h-4 q-4 0-4-4z" fill="#334155" />
+      <path d="M63 104 h12 v38 q0 4-4 4 h-4 q-4 0-4-4z" fill="#334155" />
+      {/* sneakers */}
+      <path d="M42 140 h15 v5 h-4 v3 h-15 q0-4 2-5z" fill="#f8fafc" stroke="#d1d5db" />
+      <path d="M63 140 h15 v8 h-15 v-3 h-4 q0-5 4-5z" fill="#f8fafc" stroke="#d1d5db" />
       {/* back arm */}
-      <rect x="31" y="68" width="11" height="33" rx="5.5" fill="#7c3aed" />
-      <circle cx="36.5" cy="101" r="5.5" fill="#f0c29a" />
-      {/* torso */}
-      <path d="M41 66 q19 -9 38 0 l4 44 q-23 7 -46 0 z" fill="url(#pf-shirt)" />
-      {/* neck + head */}
-      <rect x="53" y="50" width="14" height="13" rx="3" fill="#e3ab7d" />
-      <circle cx="60" cy="38" r="18" fill="#f0c29a" />
-      <circle cx="42.5" cy="39" r="3" fill="#f0c29a" />
-      <circle cx="77.5" cy="39" r="3" fill="#f0c29a" />
-      {/* hair */}
+      <rect x="30" y="66" width="12" height="32" rx="6" fill="#7c3aed" />
+      <circle cx="36" cy="98" r="6" fill="#f4c9a0" />
+      {/* hoodie */}
+      <path d="M38 64 q22 -11 44 0 l3 44 q-25 8 -50 0 z" fill="url(#pf-shirt)" />
+      <path d="M46 90 q14 5 28 0 l-2 12 q-12 4 -24 0z" fill="#00000012" />
+      <path d="M45 60 q15 -12 30 0 q-5 9 -15 9 t-15 -9z" fill="#6d28d9" />
+      <line x1="55" y1="66" x2="55" y2="80" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="55" cy="81" r="1.4" fill="#fff" />
+      <line x1="65" y1="66" x2="65" y2="80" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="65" cy="81" r="1.4" fill="#fff" />
+      {/* neck + head (bigger, younger) */}
+      <rect x="53" y="45" width="14" height="12" rx="3" fill="#e6b184" />
+      <circle cx="60" cy="32" r="21" fill="#f4c9a0" />
+      <circle cx="39.5" cy="33" r="3.2" fill="#f4c9a0" />
+      <circle cx="80.5" cy="33" r="3.2" fill="#f4c9a0" />
+      {/* tousled hair */}
       <path
-        d="M42 39 a18 18 0 0 1 36 0 q1-8-4-12 q-5 4-14 4 t-14-4 q-5 4-4 12z"
-        fill="#2b2b31"
+        d="M39 33 q-1-13 8-18 q3 4 8 3 q4 3 9 0 q4 2 8-1 q9 6 9 16 q-4-7-10-8 q-3 3-8 2 q-5 2-9-1 q-6 2-9 7 q-2-2-5 0z"
+        fill="#4a3b2f"
       />
-      {/* face */}
-      <circle cx="53" cy="39" r="2.2" fill="#2b3648" />
-      <circle cx="67" cy="39" r="2.2" fill="#2b3648" />
-      <path d="M54 46 q6 5 12 0" stroke="#2b3648" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* big eyes + smile */}
+      <circle cx="52" cy="33" r="2.8" fill="#2b3648" />
+      <circle cx="53" cy="32" r="0.9" fill="#fff" />
+      <circle cx="68" cy="33" r="2.8" fill="#2b3648" />
+      <circle cx="69" cy="32" r="0.9" fill="#fff" />
+      <path d="M52 41 q8 6 16 0" stroke="#2b3648" strokeWidth="2.2" fill="none" strokeLinecap="round" />
       {/* front arm holding the prompt cards */}
-      <rect x="72" y="66" width="11" height="24" rx="5.5" fill="#7c3aed" transform="rotate(28 77 70)" />
-      <rect x="78" y="70" width="10" height="22" rx="5" fill="#f0c29a" transform="rotate(-22 83 82)" />
-      <g transform="rotate(-8 84 76)">
-        <rect x="70" y="70" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
-        <rect x="73" y="66" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
-        <rect x="74" y="70" width="12" height="2.5" rx="1" fill="#7c3aed99" />
+      <rect x="71" y="64" width="12" height="24" rx="6" fill="#7c3aed" transform="rotate(26 77 68)" />
+      <rect x="78" y="70" width="10" height="20" rx="5" fill="#f4c9a0" transform="rotate(-24 83 82)" />
+      <g transform="rotate(-8 84 74)">
+        <rect x="70" y="68" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
+        <rect x="73" y="64" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
+        <rect x="76" y="68" width="12" height="2.4" rx="1" fill="#7c3aed99" />
       </g>
     </svg>
   );
 }
+
+const LIBRARY_CARDS = [
+  { title: "Glass Login UI", desc: "Glassmorphism sign-in" },
+  { title: "Stripe Checkout", desc: "Payment flow" },
+  { title: "Ghibli Portrait", desc: "Anime photo style" },
+  { title: "JWT Auth API", desc: "Login + refresh" },
+];
 
 function LibraryScene() {
   return (
@@ -118,17 +133,24 @@ function LibraryScene() {
       </div>
       {/* Prompts fly into organized shelves as the mascot arrives */}
       <div className="grid flex-1 grid-cols-2 gap-2.5">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {LIBRARY_CARDS.map((c, i) => (
           <div
-            key={i}
-            className="relative h-12 rounded-lg border-2 border-dashed border-primary/25"
+            key={c.title}
+            className="relative h-14 rounded-lg border-2 border-dashed border-primary/25"
           >
             <div
-              className="pf-fly absolute inset-0 rounded-lg border border-border bg-card p-1.5 shadow-sm"
+              className="pf-fly absolute inset-0 rounded-lg border border-border bg-card p-2 shadow-sm"
               style={{ animationDelay: `${0.8 + 0.18 * i}s` }}
             >
-              <div className="h-1.5 w-8 rounded bg-primary/60" />
-              <div className="mt-1 h-1 w-10 rounded bg-muted-foreground/30" />
+              <div className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="truncate text-[11px] font-semibold text-foreground">
+                  {c.title}
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-[9px] leading-tight text-muted-foreground">
+                {c.desc}
+              </p>
             </div>
           </div>
         ))}
