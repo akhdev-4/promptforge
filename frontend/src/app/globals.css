@@ -275,3 +275,40 @@ body {
     animation: none;
   }
 }
+
+/* --- Onboarding tour step transition --- */
+@keyframes pf-onb-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pf-onb-in {
+  animation: pf-onb-in 0.35s ease both;
+}
+@keyframes pf-onb-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.pf-onb-pop {
+  animation: pf-onb-pop 0.45s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-onb-in,
+  .pf-onb-pop {
+    animation: none;
+  }
+}

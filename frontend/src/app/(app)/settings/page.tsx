@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Monitor, Moon, Sun, UserCog } from "lucide-react";
+import { Compass, LogOut, Monitor, Moon, Sun, UserCog } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -114,6 +114,22 @@ export default function SettingsPage() {
             value={user.is_verified ? "Yes" : "No"}
           />
           <AccountRow label="Member since" value={formatDate(user.created_at)} />
+        </CardContent>
+      </Card>
+
+      {/* Getting started */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Getting started</CardTitle>
+          <CardDescription>New here, or want a refresher?</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() => window.dispatchEvent(new CustomEvent("pf:open-guide"))}
+          >
+            <Compass className="h-4 w-4" /> Replay the welcome guide
+          </Button>
         </CardContent>
       </Card>
 

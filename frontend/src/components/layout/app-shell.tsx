@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import { PromptAssistant } from "@/components/assistant/prompt-assistant";
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { useAuthStore } from "@/stores/auth";
@@ -40,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <PromptAssistant />
+      <OnboardingTour />
     </div>
   );
 }
