@@ -1,6 +1,7 @@
 "use client";
 
 import { Rocket, Sparkles } from "lucide-react";
+import type * as React from "react";
 
 /** Small, self-contained SVG/CSS "live preview" scenes for the onboarding tour. */
 
@@ -60,100 +61,146 @@ function Dashboard() {
   );
 }
 
-function Mascot({ className }: { className?: string }) {
+/** Young developer at a workspace: thick black hair, hoodie, laptop. */
+function Developer({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 120 168" fill="none" className={className} aria-hidden>
+    <svg viewBox="0 0 150 185" fill="none" className={className} aria-hidden>
       <defs>
-        <linearGradient id="pf-shirt" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="pf-hood" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#8b5cf6" />
           <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
       </defs>
-      <ellipse cx="60" cy="162" rx="30" ry="5" fill="#00000012" />
-      {/* joggers */}
-      <path d="M49 104 h12 v38 q0 4-4 4 h-4 q-4 0-4-4z" fill="#334155" />
-      <path d="M63 104 h12 v38 q0 4-4 4 h-4 q-4 0-4-4z" fill="#334155" />
-      {/* sneakers */}
-      <path d="M42 140 h15 v5 h-4 v3 h-15 q0-4 2-5z" fill="#f8fafc" stroke="#d1d5db" />
-      <path d="M63 140 h15 v8 h-15 v-3 h-4 q0-5 4-5z" fill="#f8fafc" stroke="#d1d5db" />
-      {/* back arm */}
-      <rect x="30" y="66" width="12" height="32" rx="6" fill="#7c3aed" />
-      <circle cx="36" cy="98" r="6" fill="#f4c9a0" />
-      {/* hoodie */}
-      <path d="M38 64 q22 -11 44 0 l3 44 q-25 8 -50 0 z" fill="url(#pf-shirt)" />
-      <path d="M46 90 q14 5 28 0 l-2 12 q-12 4 -24 0z" fill="#00000012" />
-      <path d="M45 60 q15 -12 30 0 q-5 9 -15 9 t-15 -9z" fill="#6d28d9" />
-      <line x1="55" y1="66" x2="55" y2="80" stroke="#fff" strokeWidth="1.6" />
-      <circle cx="55" cy="81" r="1.4" fill="#fff" />
-      <line x1="65" y1="66" x2="65" y2="80" stroke="#fff" strokeWidth="1.6" />
-      <circle cx="65" cy="81" r="1.4" fill="#fff" />
-      {/* neck + head (bigger, younger) */}
-      <rect x="53" y="45" width="14" height="12" rx="3" fill="#e6b184" />
-      <circle cx="60" cy="32" r="21" fill="#f4c9a0" />
-      <circle cx="39.5" cy="33" r="3.2" fill="#f4c9a0" />
-      <circle cx="80.5" cy="33" r="3.2" fill="#f4c9a0" />
-      {/* tousled hair */}
+      {/* hoodie shoulders */}
+      <path d="M18 185 q0-52 57-52 t57 52 z" fill="url(#pf-hood)" />
+      {/* hood collar */}
+      <path d="M52 140 q23 -14 46 0 q-7 12 -23 12 t-23 -12z" fill="#6d28d9" />
+      {/* drawstrings */}
+      <line x1="66" y1="146" x2="66" y2="162" stroke="#fff" strokeWidth="2" />
+      <circle cx="66" cy="163" r="1.6" fill="#fff" />
+      <line x1="84" y1="146" x2="84" y2="162" stroke="#fff" strokeWidth="2" />
+      <circle cx="84" cy="163" r="1.6" fill="#fff" />
+      {/* neck */}
+      <rect x="66" y="118" width="18" height="16" rx="4" fill="#e2ac7c" />
+      {/* head + ears */}
+      <circle cx="75" cy="92" r="27" fill="#f0c19a" />
+      <circle cx="48" cy="93" r="4" fill="#f0c19a" />
+      <circle cx="102" cy="93" r="4" fill="#f0c19a" />
+      {/* thick black hair */}
       <path
-        d="M39 33 q-1-13 8-18 q3 4 8 3 q4 3 9 0 q4 2 8-1 q9 6 9 16 q-4-7-10-8 q-3 3-8 2 q-5 2-9-1 q-6 2-9 7 q-2-2-5 0z"
-        fill="#4a3b2f"
+        d="M48 92 q-3-30 15-36 q6 6 12 5 q7 4 15-1 q7 3 12-2 q12 9 11 34 q-6-12-15-13 q-5 4-13 3 q-8 3-14-2 q-9 3-13 12 q-4-2-8 0z"
+        fill="#17171c"
       />
-      {/* big eyes + smile */}
-      <circle cx="52" cy="33" r="2.8" fill="#2b3648" />
-      <circle cx="53" cy="32" r="0.9" fill="#fff" />
-      <circle cx="68" cy="33" r="2.8" fill="#2b3648" />
-      <circle cx="69" cy="32" r="0.9" fill="#fff" />
-      <path d="M52 41 q8 6 16 0" stroke="#2b3648" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      {/* front arm holding the prompt cards */}
-      <rect x="71" y="64" width="12" height="24" rx="6" fill="#7c3aed" transform="rotate(26 77 68)" />
-      <rect x="78" y="70" width="10" height="20" rx="5" fill="#f4c9a0" transform="rotate(-24 83 82)" />
-      <g transform="rotate(-8 84 74)">
-        <rect x="70" y="68" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
-        <rect x="73" y="64" width="24" height="16" rx="2.5" fill="#fff" stroke="#e5e7eb" />
-        <rect x="76" y="68" width="12" height="2.4" rx="1" fill="#7c3aed99" />
-      </g>
+      <path d="M52 66 q10-10 24-8" stroke="#2c2c34" strokeWidth="3" fill="none" strokeLinecap="round" />
+      {/* brows + expressive eyes */}
+      <path d="M58 84 q6-3 11 0" stroke="#17171c" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <path d="M84 84 q6-3 11 0" stroke="#17171c" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <circle cx="63" cy="92" r="3.4" fill="#22303f" />
+      <circle cx="64.5" cy="90.5" r="1.1" fill="#fff" />
+      <circle cx="89" cy="92" r="3.4" fill="#22303f" />
+      <circle cx="90.5" cy="90.5" r="1.1" fill="#fff" />
+      {/* friendly smile */}
+      <path d="M64 104 q11 8 22 0" stroke="#b5714b" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      {/* laptop on the desk */}
+      <rect x="34" y="168" width="82" height="10" rx="3" fill="#cbd5e1" />
+      <path d="M42 168 v-22 a3 3 0 0 1 3-3 h60 a3 3 0 0 1 3 3 v22z" fill="#1e293b" />
+      <rect x="48" y="150" width="48" height="14" rx="2" fill="#334155" />
+      <rect x="51" y="153" width="20" height="2.4" rx="1" fill="#8b5cf6" />
+      <rect x="51" y="158" width="30" height="2.4" rx="1" fill="#64748b" />
     </svg>
   );
 }
 
 const LIBRARY_CARDS = [
-  { title: "Glass Login UI", desc: "Glassmorphism sign-in" },
-  { title: "Stripe Checkout", desc: "Payment flow" },
-  { title: "Ghibli Portrait", desc: "Anime photo style" },
-  { title: "JWT Auth API", desc: "Login + refresh" },
+  { title: "Login UI", desc: "Glass sign-in", dot: "#7c3aed", dx: 300, dy: -40 },
+  { title: "Stripe API", desc: "Payment flow", dot: "#3b82f6", dx: 290, dy: 40 },
+  { title: "Ghibli Art", desc: "Anime style", dot: "#ec4899", dx: 320, dy: 10 },
 ];
+
+// Book spines that "materialize" on the shelves as cards arrive.
+const BOOK_PALETTE = ["#6366f1", "#8b5cf6", "#7c3aed", "#a78bfa", "#3b82f6", "#818cf8", "#ec4899"];
+function shelfBooks(seed: number, count = 9) {
+  return Array.from({ length: count }, (_, i) => ({
+    h: 30 + ((i * 7 + seed * 13) % 22),
+    c: BOOK_PALETTE[(i + seed) % BOOK_PALETTE.length]!,
+    // staggered so the shelf fills left-to-right in time with the flying cards
+    delay: 0.15 * i + seed * 0.4,
+  }));
+}
+
+function Shelf({ seed }: { seed: number }) {
+  return (
+    <div className="relative flex flex-1 items-end justify-center gap-[3px] border-b-4 border-[#8a5a34] px-2 pb-1">
+      {shelfBooks(seed).map((b, i) => (
+        <div
+          key={i}
+          className="pf-book-rise w-2.5 rounded-t-sm"
+          style={{
+            height: `${b.h}px`,
+            background: b.c,
+            boxShadow: "inset -2px 0 0 rgba(0,0,0,0.15)",
+            animationDelay: `${b.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function LibraryScene() {
   return (
-    <div className="relative flex h-full w-full items-center gap-3 px-5">
-      {/* Character walks in and "delivers" the prompts */}
-      <div className="pf-walk shrink-0">
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Developer at the workspace */}
+      <div className="pf-walk absolute bottom-0 left-2">
         <div className="pf-float2">
-          <Mascot className="h-44 w-auto" />
+          <Developer className="h-44 w-auto" />
         </div>
       </div>
-      {/* Prompts fly into organized shelves as the mascot arrives */}
-      <div className="grid flex-1 grid-cols-2 gap-2.5">
-        {LIBRARY_CARDS.map((c, i) => (
-          <div
-            key={c.title}
-            className="relative h-14 rounded-lg border-2 border-dashed border-primary/25"
-          >
-            <div
-              className="pf-fly absolute inset-0 rounded-lg border border-border bg-card p-2 shadow-sm"
-              style={{ animationDelay: `${0.8 + 0.18 * i}s` }}
-            >
-              <div className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                <span className="truncate text-[11px] font-semibold text-foreground">
-                  {c.title}
-                </span>
-              </div>
-              <p className="mt-0.5 truncate text-[9px] leading-tight text-muted-foreground">
-                {c.desc}
-              </p>
-            </div>
+
+      {/* Prompt cards the dev sends toward the shelf */}
+      {LIBRARY_CARDS.map((c, i) => (
+        <div
+          key={c.title}
+          className="pf-card-send absolute z-10 w-24 rounded-lg border border-border bg-card p-1.5 shadow-md"
+          style={
+            {
+              left: "128px",
+              top: `${44 + i * 46}px`,
+              "--dx": `${c.dx}px`,
+              "--dy": `${c.dy}px`,
+              animationDelay: `${i * 0.7}s`,
+            } as React.CSSProperties
+          }
+        >
+          <div className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: c.dot }} />
+            <span className="truncate text-[10px] font-semibold text-foreground">{c.title}</span>
           </div>
-        ))}
+          <p className="truncate text-[8px] leading-tight text-muted-foreground">{c.desc}</p>
+        </div>
+      ))}
+
+      {/* Wooden bookshelf that fills with organized books */}
+      <div className="absolute right-4 top-8 h-[184px] w-[372px]">
+        {/* soft violet glow when the library is organized */}
+        <div
+          className="pf-shelf-glow absolute -inset-3 rounded-2xl"
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.45), transparent 70%)" }}
+        />
+        <div
+          className="relative flex h-full flex-col gap-1.5 rounded-xl p-2"
+          style={{
+            background: "linear-gradient(#caa274,#b3854f)",
+            boxShadow: "inset 0 0 0 4px #a06a3f, 0 6px 16px rgba(0,0,0,0.13)",
+          }}
+        >
+          <div
+            className="absolute rounded-md"
+            style={{ inset: "8px", background: "linear-gradient(#e2c49a,#d3ac7f)" }}
+          />
+          <Shelf seed={0} />
+          <Shelf seed={3} />
+        </div>
       </div>
     </div>
   );
