@@ -60,24 +60,71 @@ function Dashboard() {
   );
 }
 
+function Mascot() {
+  return (
+    <svg width="76" height="98" viewBox="0 0 76 98" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id="pf-masc" x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#8b5cf6" />
+          <stop offset="1" stopColor="#7c3aed" />
+        </linearGradient>
+      </defs>
+      {/* legs */}
+      <rect x="28" y="74" width="7" height="18" rx="3.5" fill="#6d28d9" />
+      <rect x="39" y="74" width="7" height="18" rx="3.5" fill="#6d28d9" />
+      {/* body */}
+      <rect x="23" y="44" width="28" height="36" rx="12" fill="url(#pf-masc)" />
+      {/* back arm */}
+      <rect x="20" y="48" width="7" height="18" rx="3.5" fill="#7c3aed" />
+      {/* head */}
+      <circle cx="37" cy="27" r="15" fill="url(#pf-masc)" />
+      <circle cx="32" cy="25" r="2.3" fill="#fff" />
+      <circle cx="42" cy="25" r="2.3" fill="#fff" />
+      <path d="M32 32q5 4 10 0" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* front arm holding a card stack */}
+      <rect
+        x="46"
+        y="48"
+        width="7"
+        height="17"
+        rx="3.5"
+        fill="#7c3aed"
+        transform="rotate(-22 49 52)"
+      />
+      <g>
+        <rect x="52" y="47" width="15" height="11" rx="2" fill="#fff" stroke="#e5e7eb" />
+        <rect x="54" y="43" width="15" height="11" rx="2" fill="#fff" stroke="#e5e7eb" />
+      </g>
+    </svg>
+  );
+}
+
 function LibraryScene() {
   return (
-    <div className="relative grid h-full w-full grid-cols-3 content-center gap-2.5 px-6 py-4">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="relative h-14 rounded-lg border-2 border-dashed border-primary/25"
-        >
-          <div
-            className="pf-fly absolute inset-0 rounded-lg border border-border bg-card p-2 shadow-sm"
-            style={{ animationDelay: `${0.12 * i}s` }}
-          >
-            <div className="h-1.5 w-9 rounded bg-primary/60" />
-            <div className="mt-1.5 h-1 w-11 rounded bg-muted-foreground/30" />
-            <div className="mt-1 h-1 w-7 rounded bg-muted-foreground/20" />
-          </div>
+    <div className="relative flex h-full w-full items-center gap-3 px-5">
+      {/* Character walks in and "delivers" the prompts */}
+      <div className="pf-walk shrink-0">
+        <div className="pf-float2">
+          <Mascot />
         </div>
-      ))}
+      </div>
+      {/* Prompts fly into organized shelves as the mascot arrives */}
+      <div className="grid flex-1 grid-cols-2 gap-2.5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="relative h-12 rounded-lg border-2 border-dashed border-primary/25"
+          >
+            <div
+              className="pf-fly absolute inset-0 rounded-lg border border-border bg-card p-1.5 shadow-sm"
+              style={{ animationDelay: `${0.8 + 0.18 * i}s` }}
+            >
+              <div className="h-1.5 w-8 rounded bg-primary/60" />
+              <div className="mt-1 h-1 w-10 rounded bg-muted-foreground/30" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
