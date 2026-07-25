@@ -1,7 +1,14 @@
 /** Project / module / component API wrappers. */
 
 import { apiFetch } from "@/lib/api";
-import type { ComponentCatalogItem, Page, ProjectSummary, ProjectTree } from "@/types";
+import type {
+  ComponentCatalogItem,
+  Page,
+  ProjectSummary,
+  ProjectTemplate,
+  ProjectTree,
+  TemplateUpsertInput,
+} from "@/types";
 
 export const projectsApi = {
   list: (page = 1, size = 30) =>
@@ -30,4 +37,14 @@ export const projectsApi = {
 
   deleteComponent: (componentId: string) =>
     apiFetch<void>(`/projects/components/${componentId}`, { method: "DELETE" }),
+
+  // --- Starter template (codebase pointer) ---
+  getTemplate: (id: string) =>
+    apiFetch<ProjectTemplate>(`/projects/${id}/template`, { auth: false }),
+
+  upsertTemplate: (id: string, data: TemplateUpsertInput) =>
+    apiFetch<ProjectTemplate>(`/projects/${id}/template`, { method: "PUT", body: data }),
+
+  deleteTemplate: (id: string) =>
+    apiFetch<void>(`/projects/${id}/template`, { method: "DELETE" }),
 };

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 
+import { TemplateSection } from "@/components/projects/template-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,6 +108,8 @@ export default function ProjectDetailPage() {
           </Button>
         )}
       </div>
+
+      <TemplateSection projectId={tree.id} canManage={canManage} />
 
       <div className="space-y-4">
         {tree.modules.map((module) => (

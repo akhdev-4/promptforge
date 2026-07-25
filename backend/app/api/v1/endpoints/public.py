@@ -17,9 +17,11 @@ from app.models.enums import PromptStatus, PromptType
 from app.repositories.prompt import SortKey
 from app.schemas.common import Page, PageParams
 from app.schemas.prompt import PromptDetail, PromptSummary
+from app.schemas.template import PublicTemplateManifest, PublicTemplateSummary
 from app.schemas.user import UserPublic
 from app.services.prompt import PromptService
 from app.services.team import TeamService
+from app.services.template import TemplateService
 
 router = APIRouter()
 
@@ -74,3 +76,32 @@ async def get_prompt(prompt_id: uuid.UUID, db: DbSession, _user: ApiKeyUser) -> 
     if prompt.status != PromptStatus.PUBLISHED:
         raise NotFoundError("Prompt not found")
     return PromptDetail.model_validate(prompt)
+
+
+@router.get(
+    "/templates",
+    response_model=Page[PublicTemplateSummary],
+    summary="List starter templates (projects with a codebase)",
+)
+async def list_templates(
+    db: DbSession,
+    _user: ApiKeyUser,
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+) -> Page[PublicTemplateSummary]:
+    params = PageParams(page=page, size=size)
+    items, total = await TemplateService(db).list_public(
+        offset=params.offset, limit=params.limit
+    )
+    return Page.create(items, total, params)
+
+
+@router.get(
+    "/templates/{project_id}",
+    response_model=PublicTemplateManifest,
+    summary="Full template manifest (code pointer + prompt map) for the CLI",
+)
+async def get_template(
+    project_id: uuid.UUID, db: DbSession, _user: ApiKeyUser
+) -> PublicTemplateManifest:
+    return await TemplateService(db).get_manifest(project_id)

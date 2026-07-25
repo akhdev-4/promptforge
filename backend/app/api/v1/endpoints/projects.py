@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Query, status
 
 from app.api.deps import CurrentUser, DbSession
+from app.core.exceptions import NotFoundError
 from app.schemas.common import Page, PageParams
 from app.schemas.project import (
     ComponentCatalogItem,
@@ -19,7 +20,9 @@ from app.schemas.project import (
     ProjectTree,
     ProjectUpdate,
 )
+from app.schemas.template import TemplateRead, TemplateUpsert
 from app.services.project import ProjectService
+from app.services.template import TemplateService
 
 router = APIRouter()
 
@@ -67,6 +70,40 @@ async def update_project(
 )
 async def delete_project(project_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
     await ProjectService(db).delete_project(project_id, user)
+
+
+# --- Starter template (codebase pointer) ------------------------------------
+@router.get(
+    "/{project_id}/template",
+    response_model=TemplateRead,
+    summary="Get a project's starter-template metadata",
+)
+async def get_template(project_id: uuid.UUID, db: DbSession) -> TemplateRead:
+    tpl = await TemplateService(db).get_for_project(project_id)
+    if tpl is None:
+        raise NotFoundError("This project is not a template")
+    return TemplateRead.model_validate(tpl)
+
+
+@router.put(
+    "/{project_id}/template",
+    response_model=TemplateRead,
+    summary="Mark a project as a starter template (owner only)",
+)
+async def upsert_template(
+    project_id: uuid.UUID, data: TemplateUpsert, db: DbSession, user: CurrentUser
+) -> TemplateRead:
+    tpl = await TemplateService(db).upsert(project_id, user, data)
+    return TemplateRead.model_validate(tpl)
+
+
+@router.delete(
+    "/{project_id}/template",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Unmark a project as a template (owner only)",
+)
+async def delete_template(project_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
+    await TemplateService(db).remove(project_id, user)
 
 
 # --- Modules ----------------------------------------------------------------

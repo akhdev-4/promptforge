@@ -259,6 +259,23 @@ export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
   members: TeamMember[];
 }
 
+export interface ProjectTemplate {
+  project_id: string;
+  repo_url: string;
+  stack: string | null;
+  setup_command: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TemplateUpsertInput {
+  repo_url: string;
+  stack?: string | null;
+  setup_command?: string | null;
+  notes?: string | null;
+}
+
 export interface ApiKey {
   id: string;
   name: string;
