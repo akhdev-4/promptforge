@@ -1,17 +1,19 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Loader2, Package, Terminal, Trash2 } from "lucide-react";
+import { Download, ExternalLink, Loader2, Package, Terminal, Trash2 } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError } from "@/lib/api";
+import { KIT_CATEGORIES, KIT_CATEGORY_LABEL } from "@/lib/kit-categories";
 import { projectsApi } from "@/lib/projects-api";
-import type { ProjectTemplate, TemplateUpsertInput } from "@/types";
+import type { KitCategory, ProjectTemplate, TemplateUpsertInput } from "@/types";
 
 function templateKey(id: string) {
   return ["project-template", id] as const;
@@ -97,11 +99,16 @@ export function TemplateSection({
           />
         ) : template ? (
           <div className="space-y-2 text-sm">
+            {template.category && (
+              <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                {KIT_CATEGORY_LABEL[template.category]}
+              </span>
+            )}
             <a
               href={template.repo_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+              className="flex items-center gap-2 font-medium text-primary hover:underline"
             >
               <ExternalLink className="h-4 w-4" /> {template.repo_url}
             </a>
@@ -119,6 +126,11 @@ export function TemplateSection({
             {template.notes && (
               <p className="whitespace-pre-wrap text-muted-foreground">{template.notes}</p>
             )}
+            <Button size="sm" asChild>
+              <a href={projectsApi.templateDownloadUrl(projectId)}>
+                <Download className="h-4 w-4" /> Download codebase
+              </a>
+            </Button>
           </div>
         ) : null}
       </CardContent>
@@ -140,6 +152,7 @@ function TemplateForm({
   onCancel?: () => void;
 }) {
   const [repoUrl, setRepoUrl] = React.useState(initial?.repo_url ?? "");
+  const [category, setCategory] = React.useState<KitCategory | "">(initial?.category ?? "");
   const [stack, setStack] = React.useState(initial?.stack ?? "");
   const [setup, setSetup] = React.useState(initial?.setup_command ?? "");
   const [notes, setNotes] = React.useState(initial?.notes ?? "");
@@ -149,13 +162,29 @@ function TemplateForm({
       <p className="text-sm text-muted-foreground">
         Point this project at a real codebase so others can pull it (soon, via the CLI).
       </p>
-      <div className="space-y-1.5">
-        <Label>Repository URL</Label>
-        <Input
-          value={repoUrl}
-          onChange={(e) => setRepoUrl(e.target.value)}
-          placeholder="https://github.com/you/starter-store"
-        />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Repository URL</Label>
+          <Input
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            placeholder="https://github.com/you/starter-store"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Category</Label>
+          <Select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as KitCategory | "")}
+          >
+            <option value="">— none —</option>
+            {KIT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
@@ -192,6 +221,7 @@ function TemplateForm({
           onClick={() =>
             onSubmit({
               repo_url: repoUrl.trim(),
+              category: category || null,
               stack: stack.trim() || null,
               setup_command: setup.trim() || null,
               notes: notes.trim() || null,

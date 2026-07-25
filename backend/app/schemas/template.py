@@ -7,12 +7,14 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.enums import KitCategory
 from app.schemas.project import ProjectAuthor
 
 
 # --- Owner management --------------------------------------------------------
 class TemplateUpsert(BaseModel):
     repo_url: str = Field(min_length=1, max_length=500, description="Public Git URL")
+    category: KitCategory | None = None
     stack: str | None = Field(default=None, max_length=200)
     setup_command: str | None = Field(default=None, max_length=300)
     notes: str | None = None
@@ -22,6 +24,7 @@ class TemplateRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     project_id: uuid.UUID
+    category: KitCategory | None
     repo_url: str
     stack: str | None
     setup_command: str | None
@@ -39,6 +42,7 @@ class PublicTemplateSummary(BaseModel):
     slug: str
     description: str | None
     icon: str | None
+    category: KitCategory | None
     stack: str | None
     repo_url: str
     prompt_count: int

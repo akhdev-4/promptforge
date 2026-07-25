@@ -25,7 +25,10 @@ class ProjectTemplate(UUIDMixin, TimestampMixin, Base):
     project_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    # Where the actual code lives — a public Git URL the CLI can clone.
+    # Curated kit type (e.g. "ecommerce"), for the Starter Kits catalog. Stored
+    # as a plain string so it stays forward-compatible if the list grows.
+    category: Mapped[str | None] = mapped_column(String(40), index=True)
+    # Where the actual code lives — a Git URL the download endpoint archives.
     repo_url: Mapped[str] = mapped_column(String(500), nullable=False)
     # Human-readable stack summary, e.g. "Next.js + FastAPI + Stripe".
     stack: Mapped[str | None] = mapped_column(String(200))

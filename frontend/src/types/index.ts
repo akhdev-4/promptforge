@@ -259,8 +259,20 @@ export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
   members: TeamMember[];
 }
 
+export type KitCategory =
+  | "ecommerce"
+  | "dashboard"
+  | "saas"
+  | "landing"
+  | "blog"
+  | "mobile"
+  | "api_service"
+  | "portfolio"
+  | "other";
+
 export interface ProjectTemplate {
   project_id: string;
+  category: KitCategory | null;
   repo_url: string;
   stack: string | null;
   setup_command: string | null;
@@ -271,9 +283,24 @@ export interface ProjectTemplate {
 
 export interface TemplateUpsertInput {
   repo_url: string;
+  category?: KitCategory | null;
   stack?: string | null;
   setup_command?: string | null;
   notes?: string | null;
+}
+
+/** A row in the public Starter Kits catalog. */
+export interface KitTemplate {
+  project_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  category: KitCategory | null;
+  stack: string | null;
+  repo_url: string;
+  prompt_count: number;
+  author: { id: string; username: string | null; full_name: string | null };
 }
 
 export interface ApiKey {

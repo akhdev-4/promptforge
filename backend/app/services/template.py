@@ -51,6 +51,16 @@ class TemplateService:
     async def get_for_project(self, project_id: uuid.UUID) -> ProjectTemplate | None:
         return await self.templates.get_by(project_id=project_id)
 
+    async def download_info(
+        self, project_id: uuid.UUID
+    ) -> tuple[str, str] | None:
+        """Return ``(repo_url, project_slug)`` for a template, or ``None``."""
+        tpl = await self.templates.get_by(project_id=project_id)
+        if tpl is None:
+            return None
+        project = await self.projects._project_or_404(project_id)
+        return tpl.repo_url, project.slug
+
     async def remove(self, project_id: uuid.UUID, user: User) -> None:
         await self.projects._owned_project(project_id, user)
         existing = await self.templates.get_by(project_id=project_id)
@@ -74,20 +84,18 @@ class TemplateService:
         return {pid: int(n) for pid, n in rows}
 
     async def list_public(
-        self, *, offset: int, limit: int
+        self, *, offset: int, limit: int, category: str | None = None
     ) -> tuple[list[PublicTemplateSummary], int]:
         base = (
             select(ProjectTemplate, Project)
             .join(Project, ProjectTemplate.project_id == Project.id)
             .order_by(ProjectTemplate.created_at.desc())
         )
-        total = int(
-            (
-                await self.session.execute(
-                    select(func.count()).select_from(ProjectTemplate)
-                )
-            ).scalar_one()
-        )
+        count_stmt = select(func.count()).select_from(ProjectTemplate)
+        if category is not None:
+            base = base.where(ProjectTemplate.category == category)
+            count_stmt = count_stmt.where(ProjectTemplate.category == category)
+        total = int((await self.session.execute(count_stmt)).scalar_one())
         rows = (
             (await self.session.execute(base.offset(offset).limit(limit)))
             .unique()
@@ -101,6 +109,7 @@ class TemplateService:
                 slug=proj.slug,
                 description=proj.description,
                 icon=proj.icon,
+                category=tpl.category,
                 stack=tpl.stack,
                 repo_url=tpl.repo_url,
                 prompt_count=counts.get(proj.id, 0),
@@ -182,6 +191,7 @@ class TemplateService:
             slug=project.slug,
             description=project.description,
             icon=project.icon,
+            category=tpl.category,
             stack=tpl.stack,
             repo_url=tpl.repo_url,
             setup_command=tpl.setup_command,

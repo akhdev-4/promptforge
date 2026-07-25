@@ -34,3 +34,17 @@ class PromptStatus(str, enum.Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
     ARCHIVED = "archived"
+
+
+class KitCategory(str, enum.Enum):
+    """Curated starter-kit types for the Starter Kits catalog."""
+
+    ECOMMERCE = "ecommerce"
+    DASHBOARD = "dashboard"
+    SAAS = "saas"
+    LANDING = "landing"
+    BLOG = "blog"
+    MOBILE = "mobile"
+    API_SERVICE = "api_service"
+    PORTFOLIO = "portfolio"
+    OTHER = "other"

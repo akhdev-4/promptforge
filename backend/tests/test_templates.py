@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
+from app.services.codebase import UnsupportedRepoError, github_archive_url
 from tests.conftest import make_user
 
 PROJECTS = "/api/v1/projects"
@@ -163,6 +164,88 @@ async def test_manifest_excludes_private_prompts(client: AsyncClient) -> None:
     assert manifest["prompt_count"] == 1  # private one excluded
     titles = [p["title"] for p in manifest["modules"][0]["components"][0]["prompts"]]
     assert "Secret Checkout Tweak" not in titles
+
+
+@pytest.mark.asyncio
+async def test_category_filter(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    s = await _scaffold(client, headers)
+    pid = s["project"]["id"]
+    await client.put(
+        f"{PROJECTS}/{pid}/template",
+        json={"repo_url": "https://github.com/acme/store", "category": "ecommerce"},
+        headers=headers,
+    )
+    key = await _key(client, headers)
+
+    matched = (await client.get(f"{PUBLIC}/templates?category=ecommerce", headers=key)).json()
+    row = next(r for r in matched["items"] if r["project_id"] == pid)
+    assert row["category"] == "ecommerce"
+
+    other = (await client.get(f"{PUBLIC}/templates?category=saas", headers=key)).json()
+    assert all(r["project_id"] != pid for r in other["items"])
+
+
+@pytest.mark.asyncio
+async def test_download_requires_github_and_template(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    s = await _scaffold(client, headers)
+    pid = s["project"]["id"]
+    key = await _key(client, headers)
+
+    # No template yet -> 404.
+    assert (
+        await client.get(f"{PUBLIC}/templates/{pid}/download", headers=key)
+    ).status_code == 404
+
+    # A non-GitHub repo can't be archived -> 400 (no network hit).
+    await client.put(
+        f"{PROJECTS}/{pid}/template",
+        json={"repo_url": "https://gitlab.com/acme/store"},
+        headers=headers,
+    )
+    resp = await client.get(f"{PUBLIC}/templates/{pid}/download", headers=key)
+    assert resp.status_code == 400
+
+    # Download requires a key.
+    assert (await client.get(f"{PUBLIC}/templates/{pid}/download")).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_web_browse_route_is_public(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    s = await _scaffold(client, headers)
+    pid = s["project"]["id"]
+    await client.put(
+        f"{PROJECTS}/{pid}/template",
+        json={"repo_url": "https://github.com/acme/store", "category": "ecommerce"},
+        headers=headers,
+    )
+
+    # The site's Starter Kits page browses without an API key.
+    listing = await client.get(f"{PROJECTS}/templates?category=ecommerce")
+    assert listing.status_code == 200
+    assert any(r["project_id"] == pid for r in listing.json()["items"])
+
+    # Download on a non-template project 404s.
+    empty = (await client.post(PROJECTS, json={"name": "Empty"}, headers=headers)).json()
+    resp = await client.get(f"{PROJECTS}/{empty['id']}/template/download")
+    assert resp.status_code == 404
+
+
+def test_github_archive_url_builder() -> None:
+    assert (
+        github_archive_url("https://github.com/acme/store")
+        == "https://github.com/acme/store/archive/main.zip"
+    )
+    assert (
+        github_archive_url("https://github.com/acme/store.git", "v2")
+        == "https://github.com/acme/store/archive/v2.zip"
+    )
+    with pytest.raises(UnsupportedRepoError):
+        github_archive_url("https://gitlab.com/acme/store")
+    with pytest.raises(UnsupportedRepoError):
+        github_archive_url("https://github.com/acme/store", "../evil")
 
 
 @pytest.mark.asyncio

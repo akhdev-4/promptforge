@@ -6,6 +6,7 @@ import {
   Heart,
   LayoutDashboard,
   Library,
+  Package,
   Settings,
   Shield,
   Sparkles,
@@ -47,6 +48,7 @@ export const navSections: NavSection[] = [
     title: "Build",
     items: [
       { label: "Projects", href: "/projects", icon: FolderKanban },
+      { label: "Starter Kits", href: "/kits", icon: Package },
       { label: "Components", href: "/components", icon: Blocks },
       { label: "Teams", href: "/teams", icon: Users },
       { label: "Recommendations", href: "/recommendations", icon: Sparkles },
