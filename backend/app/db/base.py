@@ -11,6 +11,7 @@ from app.db.base_class import Base  # noqa: F401
 
 # Domain models are imported for their side effect of registering with Base's
 # metadata. They are added milestone by milestone.
+from app.models.api_key import ApiKey  # noqa: F401,E402
 from app.models.asset import PromptAsset  # noqa: F401,E402
 from app.models.category import Category  # noqa: F401,E402
 from app.models.collection import Collection, CollectionItem  # noqa: F401,E402

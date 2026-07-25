@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
+import { ApiKeysCard } from "@/components/settings/api-keys-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -116,6 +117,9 @@ export default function SettingsPage() {
           <AccountRow label="Member since" value={formatDate(user.created_at)} />
         </CardContent>
       </Card>
+
+      {/* Developer / API keys */}
+      <ApiKeysCard />
 
       {/* Getting started */}
       <Card>

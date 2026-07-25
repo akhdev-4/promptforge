@@ -6,6 +6,8 @@ tests can use it without importing FastAPI.
 
 from __future__ import annotations
 
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
@@ -15,6 +17,10 @@ from jose import JWTError, jwt
 from app.core.config import settings
 
 TokenType = Literal["access", "refresh"]
+
+# Public-API key prefix, so a leaked token is instantly recognizable (like
+# GitHub's ``ghp_`` / Stripe's ``sk_``).
+API_KEY_PREFIX = "pf_"
 
 
 # --- Passwords ---------------------------------------------------------------
@@ -35,6 +41,23 @@ def verify_password(plain: str, hashed: str) -> bool:
     except ValueError:
         # Malformed/legacy hash — treat as a non-match rather than 500.
         return False
+
+
+# --- API keys ----------------------------------------------------------------
+# Keys are long random tokens, so an unsalted SHA-256 digest is a safe, fast
+# lookup key (no bcrypt work factor needed — there's nothing to brute-force).
+def generate_api_key() -> tuple[str, str, str]:
+    """Return ``(full_key, prefix, hashed_key)`` for a freshly minted key.
+
+    ``full_key`` is shown to the user once and never stored; we persist only the
+    display ``prefix`` and the ``hashed_key``.
+    """
+    full_key = API_KEY_PREFIX + secrets.token_urlsafe(32)
+    return full_key, full_key[: len(API_KEY_PREFIX) + 8], hash_api_key(full_key)
+
+
+def hash_api_key(full_key: str) -> str:
+    return hashlib.sha256(full_key.encode("utf-8")).hexdigest()
 
 
 # --- JWT ---------------------------------------------------------------------

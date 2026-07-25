@@ -10,6 +10,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     analytics,
+    api_keys,
     auth,
     categories,
     collections,
@@ -17,6 +18,7 @@ from app.api.v1.endpoints import (
     health,
     projects,
     prompts,
+    public,
     tags,
     teams,
     users,
@@ -34,3 +36,5 @@ api_router.include_router(collections.router, prefix="/collections", tags=["coll
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(community.router, tags=["community"])
 api_router.include_router(teams.router, prefix="/teams", tags=["teams"])
+api_router.include_router(api_keys.router, prefix="/keys", tags=["api-keys"])
+api_router.include_router(public.router, prefix="/public", tags=["public-api"])

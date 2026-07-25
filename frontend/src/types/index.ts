@@ -259,6 +259,21 @@ export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
   members: TeamMember[];
 }
 
+export interface ApiKey {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+/** Returned once, on creation — carries the full plaintext secret. */
+export interface ApiKeyCreated extends ApiKey {
+  key: string;
+}
+
 export interface Comment {
   id: string;
   body: string;

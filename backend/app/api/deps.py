@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 from typing import Annotated, Any
 
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import security
@@ -16,11 +16,15 @@ from app.core.exceptions import AuthenticationError, PermissionDeniedError
 from app.db.session import get_db
 from app.models.user import User, UserRole
 from app.repositories.user import UserRepository
+from app.services.api_key import ApiKeyService
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_PREFIX}/auth/login",
     auto_error=False,
 )
+
+# Public-API authentication: clients send their key in the ``X-API-Key`` header.
+api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -72,6 +76,22 @@ async def get_optional_user(
 
 
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
+async def get_api_key_user(
+    db: DbSession,
+    key: Annotated[str | None, Depends(api_key_scheme)],
+) -> User:
+    """Authenticate a public-API request via its ``X-API-Key`` header."""
+    if not key:
+        raise AuthenticationError("Provide your API key in the X-API-Key header")
+    user = await ApiKeyService(db).authenticate(key)
+    if user is None:
+        raise AuthenticationError("Invalid or revoked API key")
+    return user
+
+
+ApiKeyUser = Annotated[User, Depends(get_api_key_user)]
 
 
 async def get_current_active_verified_user(user: CurrentUser) -> User:
