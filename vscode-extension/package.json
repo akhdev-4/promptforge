@@ -12,7 +12,13 @@
     "type": "git",
     "url": "https://github.com/akhildev-lp/promptforge"
   },
-  "categories": ["Other"],
+  "categories": ["AI", "Other"],
+  "keywords": ["prompts", "ai", "starter kit", "codebase", "scaffold", "promptforge"],
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#13111f",
+    "theme": "dark"
+  },
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
