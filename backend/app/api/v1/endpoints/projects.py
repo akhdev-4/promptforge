@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import CurrentUser, DbSession
 from app.core.exceptions import NotFoundError
+from app.core.ratelimit import rate_limit
 from app.models.enums import KitCategory
 from app.schemas.common import Page, PageParams
 from app.schemas.project import (
@@ -54,6 +55,9 @@ async def browse_templates(
 @router.get(
     "/{project_id}/template/download",
     summary="Download a starter kit's codebase as a zip",
+    dependencies=[
+        Depends(rate_limit("web_download", "RATE_LIMIT_DOWNLOAD_PER_MIN", by="ip"))
+    ],
 )
 async def download_kit(
     project_id: uuid.UUID,

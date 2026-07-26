@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
 
+    # --- Rate limiting --------------------------------------------------------
+    # In-memory limiter (per process). Good enough for a single-instance deploy;
+    # swap for a Redis-backed store if the app scales horizontally.
+    RATE_LIMIT_ENABLED: bool = True
+    # Read calls to the key-authed public API, per API key per minute.
+    RATE_LIMIT_PUBLIC_PER_MIN: int = 120
+    # Codebase downloads (heavier — they proxy an archive), per caller per minute.
+    RATE_LIMIT_DOWNLOAD_PER_MIN: int = 20
+
     # --- Playground (prompt runner) -------------------------------------------
     # "mock" = zero-key demo output. "gemini" = real output via Google's free
     # tier (get a key at aistudio.google.com, no card needed) — set GEMINI_API_KEY.

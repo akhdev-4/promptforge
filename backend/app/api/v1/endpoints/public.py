@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import ApiKeyUser, DbSession
 from app.core.exceptions import NotFoundError
+from app.core.ratelimit import rate_limit
 from app.models.enums import KitCategory, PromptStatus, PromptType
 from app.repositories.prompt import SortKey
 from app.schemas.common import Page, PageParams
@@ -115,6 +116,9 @@ async def get_template(
 @router.get(
     "/templates/{project_id}/download",
     summary="Download the kit's codebase as a zip (streamed through PromptForge)",
+    dependencies=[
+        Depends(rate_limit("public_download", "RATE_LIMIT_DOWNLOAD_PER_MIN", by="key"))
+    ],
 )
 async def download_template(
     project_id: uuid.UUID,
