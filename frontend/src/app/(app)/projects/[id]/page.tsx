@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Boxes, Layers, Package, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Boxes, Layers, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
@@ -14,12 +14,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TabBar } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useAddComponent,
   useAddModule,
   useDeleteProject,
   useProjectTemplate,
   useProjectTree,
+  useUpdateProject,
 } from "@/hooks/use-projects";
 import { useAuthStore } from "@/stores/auth";
 
@@ -63,8 +65,12 @@ export default function ProjectDetailPage() {
   const addModule = useAddModule(id);
   const addComponent = useAddComponent(id);
   const del = useDeleteProject();
+  const update = useUpdateProject(id);
 
   const [tab, setTab] = React.useState<"prompts" | "codebase">("prompts");
+  const [editing, setEditing] = React.useState(false);
+  const [editName, setEditName] = React.useState("");
+  const [editDesc, setEditDesc] = React.useState("");
   const confirm = useConfirm();
   const toast = useToast();
 
@@ -98,6 +104,22 @@ export default function ProjectDetailPage() {
     router.push("/projects");
   };
 
+  const startEdit = () => {
+    setEditName(tree.name);
+    setEditDesc(tree.description ?? "");
+    setEditing(true);
+  };
+
+  const onSaveEdit = async () => {
+    if (!editName.trim()) return;
+    await update.mutateAsync({
+      name: editName.trim(),
+      description: editDesc.trim() || null,
+    });
+    toast.success("Project updated.");
+    setEditing(false);
+  };
+
   const hasCodebase = Boolean(template);
   const promptCount = tree.modules.reduce(
     (n, m) => n + m.components.reduce((c, comp) => c + comp.prompt_count, 0),
@@ -114,27 +136,64 @@ export default function ProjectDetailPage() {
       </Link>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{tree.name}</h1>
-            {hasCodebase && (
-              <Badge variant="secondary" className="gap-1">
-                <Package className="h-3 w-3" /> Has codebase
-              </Badge>
-            )}
+        {editing ? (
+          <div className="max-w-xl flex-1 space-y-2">
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Project name"
+            />
+            <Textarea
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="Description (optional) — what is this application?"
+              className="min-h-16"
+              maxLength={1000}
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={onSaveEdit}
+                disabled={update.isPending || !editName.trim()}
+              >
+                {update.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+            </div>
           </div>
-          {tree.description && (
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{tree.description}</p>
-          )}
-          <p className="mt-2 text-xs text-muted-foreground">
-            by {tree.author.full_name ?? tree.author.username ?? "unknown"} ·{" "}
-            {tree.modules.length} module{tree.modules.length === 1 ? "" : "s"}
-          </p>
-        </div>
-        {canManage && (
-          <Button variant="destructive" onClick={onDelete} disabled={del.isPending}>
-            <Trash2 className="h-4 w-4" /> Delete project
-          </Button>
+        ) : (
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{tree.name}</h1>
+              {hasCodebase && (
+                <Badge variant="secondary" className="gap-1">
+                  <Package className="h-3 w-3" /> Has codebase
+                </Badge>
+              )}
+            </div>
+            {tree.description && (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                {tree.description}
+              </p>
+            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              by {tree.author.full_name ?? tree.author.username ?? "unknown"} ·{" "}
+              {tree.modules.length} module{tree.modules.length === 1 ? "" : "s"}
+            </p>
+          </div>
+        )}
+        {canManage && !editing && (
+          <div className="flex shrink-0 gap-2">
+            <Button variant="outline" onClick={startEdit}>
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+            <Button variant="destructive" onClick={onDelete} disabled={del.isPending}>
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+          </div>
         )}
       </div>
 

@@ -79,6 +79,18 @@ export function useAddComponent(projectId: string) {
   });
 }
 
+export function useUpdateProject(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name?: string; description?: string | null }) =>
+      projectsApi.update(id, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: projectKeys.tree(id) });
+      void qc.invalidateQueries({ queryKey: projectKeys.list });
+    },
+  });
+}
+
 export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({

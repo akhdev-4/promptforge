@@ -27,6 +27,9 @@ export const projectsApi = {
   create: (data: { name: string; description?: string }) =>
     apiFetch<ProjectSummary>("/projects", { method: "POST", body: data }),
 
+  update: (id: string, data: { name?: string; description?: string | null }) =>
+    apiFetch<ProjectSummary>(`/projects/${id}`, { method: "PATCH", body: data }),
+
   remove: (id: string) => apiFetch<void>(`/projects/${id}`, { method: "DELETE" }),
 
   addModule: (projectId: string, data: { name: string; description?: string }) =>
