@@ -14,8 +14,10 @@ from collections.abc import AsyncIterator
 
 import httpx
 
-# Accept only clean public GitHub repo URLs; capture owner + repo.
-_GITHUB_RE = re.compile(r"^https?://github\.com/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$", re.I)
+# Capture owner + repo from a GitHub URL, tolerating the shapes people commonly
+# paste from the browser: a trailing "/tree/<branch>" or "/blob/...", a ".git"
+# suffix, an optional "www.", query strings, fragments, and trailing slashes.
+_GITHUB_RE = re.compile(r"^https?://(?:www\.)?github\.com/([^/\s#?]+)/([^/\s#?]+)", re.I)
 # A ref is a branch, tag, or SHA. Keep it to a safe charset (no slashes) so it
 # can't be used for path traversal when interpolated into the archive URL.
 _REF_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -40,7 +42,10 @@ def github_archive_url(repo_url: str, ref: str = "main") -> str:
     ref = (ref or "main").strip()
     if not _REF_RE.match(ref):
         raise UnsupportedRepoError("Invalid version ref")
-    owner, repo = match.group(1), match.group(2)
+    owner = match.group(1)
+    repo = match.group(2)
+    if repo.endswith(".git"):
+        repo = repo[:-4]
     # This form resolves a branch, tag, or SHA and redirects to codeload.
     return f"https://github.com/{owner}/{repo}/archive/{ref}.zip"
 

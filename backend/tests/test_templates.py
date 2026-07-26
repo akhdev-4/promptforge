@@ -234,12 +234,21 @@ async def test_web_browse_route_is_public(client: AsyncClient) -> None:
 
 
 def test_github_archive_url_builder() -> None:
+    expected = "https://github.com/acme/store/archive/main.zip"
+    # Bare, and the shapes people paste from the browser all normalize the same.
+    for url in (
+        "https://github.com/acme/store",
+        "https://github.com/acme/store/",
+        "https://github.com/acme/store.git",
+        "https://www.github.com/acme/store",
+        "https://github.com/acme/store/tree/main",
+        "https://github.com/acme/store/blob/main/README.md",
+        "https://github.com/acme/store?tab=readme",
+    ):
+        assert github_archive_url(url) == expected, url
+
     assert (
-        github_archive_url("https://github.com/acme/store")
-        == "https://github.com/acme/store/archive/main.zip"
-    )
-    assert (
-        github_archive_url("https://github.com/acme/store.git", "v2")
+        github_archive_url("https://github.com/acme/store", "v2")
         == "https://github.com/acme/store/archive/v2.zip"
     )
     with pytest.raises(UnsupportedRepoError):
