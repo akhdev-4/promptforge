@@ -40,6 +40,11 @@ export function useComponents() {
   });
 }
 
+/** All starter kits (projects that have a codebase). Shared with the Kits page. */
+export function useStarterKits() {
+  return useQuery({ queryKey: ["kits"], queryFn: () => projectsApi.browseTemplates() });
+}
+
 export function useProjectTree(id: string) {
   return useQuery({
     queryKey: projectKeys.tree(id),
