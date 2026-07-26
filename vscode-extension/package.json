@@ -1,0 +1,83 @@
+{
+  "name": "promptforge",
+  "displayName": "PromptForge",
+  "description": "Browse PromptForge starter kits and prompts, and pull codebases into your workspace.",
+  "version": "0.1.0",
+  "publisher": "promptforge",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akhildev-lp/promptforge"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "promptforge.setApiKey", "title": "PromptForge: Set API Key" },
+      { "command": "promptforge.whoami", "title": "PromptForge: Who Am I" },
+      {
+        "command": "promptforge.refreshKits",
+        "title": "PromptForge: Refresh Kits",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "promptforge.pullKit",
+        "title": "PromptForge: Pull Kit into Workspace",
+        "icon": "$(cloud-download)"
+      },
+      { "command": "promptforge.searchPrompts", "title": "PromptForge: Search Prompts" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "promptforge", "title": "PromptForge", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "promptforge": [{ "id": "promptforgeKits", "name": "Starter Kits" }]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "promptforge.refreshKits",
+          "when": "view == promptforgeKits",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "promptforge.pullKit",
+          "when": "view == promptforgeKits && viewItem == kit",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PromptForge",
+      "properties": {
+        "promptforge.apiUrl": {
+          "type": "string",
+          "default": "https://promptforge.fastapicloud.dev",
+          "description": "PromptForge API base URL."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.12"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.0"
+  }
+}
