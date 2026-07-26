@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 import { useTeams } from "@/hooks/use-teams";
 import { useCategoryTree, usePopularTags } from "@/hooks/use-taxonomy";
 import {
@@ -92,6 +93,7 @@ export function PromptForm({
   const { data: tree } = useCategoryTree();
   const { data: popularTags } = usePopularTags();
   const { data: teams } = useTeams();
+  const toast = useToast();
   const categoryOptions = React.useMemo(() => flattenCategories(tree ?? []), [tree]);
   const [tags, setTags] = React.useState<string[]>(
     initial?.tags.map((t) => t.name) ?? [],
@@ -126,7 +128,7 @@ export function PromptForm({
   const submit = handleSubmit((values) => {
     if (mode === "create" && (!values.content || values.content.trim() === "")) {
       // Surface as a field-level error without a resolver refinement.
-      window.alert("Prompt content is required.");
+      toast.error("Prompt content is required.");
       return;
     }
     const tokensRaw = values.estimated_tokens?.trim();

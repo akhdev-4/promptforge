@@ -38,8 +38,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useConfirm } from "@/components/ui/confirm";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 import { TabBar, type TabItem } from "@/components/ui/tabs";
 import { PromptCard } from "@/components/prompts/prompt-card";
 import { StarRating } from "@/components/prompts/star-rating";
@@ -81,6 +83,8 @@ export default function PromptDetailPage() {
   const { data: versions } = usePromptVersions(id);
   const del = useDeletePrompt();
   const fork = useForkPrompt();
+  const confirm = useConfirm();
+  const toast = useToast();
   const like = useToggleLike(id);
   const bookmark = useToggleBookmark(id);
   const rate = useRatePrompt(id);
@@ -176,8 +180,15 @@ export default function PromptDetailPage() {
   if (canEdit) tabs.push({ value: "assets", label: "Manage previews" });
 
   const onDelete = async () => {
-    if (!window.confirm("Delete this prompt and all its versions?")) return;
+    const ok = await confirm({
+      title: "Delete prompt?",
+      description: "This permanently deletes the prompt and all its versions.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     await del.mutateAsync(prompt.id);
+    toast.success("Prompt deleted.");
     router.push("/prompts");
   };
   const onFork = async () => {

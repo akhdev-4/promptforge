@@ -7,6 +7,8 @@ import * as React from "react";
 
 import { TemplateSection } from "@/components/projects/template-section";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ui/confirm";
+import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -63,6 +65,8 @@ export default function ProjectDetailPage() {
   const del = useDeleteProject();
 
   const [tab, setTab] = React.useState<"prompts" | "codebase">("prompts");
+  const confirm = useConfirm();
+  const toast = useToast();
 
   if (isLoading) {
     return (
@@ -82,8 +86,15 @@ export default function ProjectDetailPage() {
     user?.role === "administrator";
 
   const onDelete = async () => {
-    if (!window.confirm("Delete this project and all its modules/components?")) return;
+    const ok = await confirm({
+      title: "Delete project?",
+      description: "This permanently deletes the project and all its modules and components.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     await del.mutateAsync(tree.id);
+    toast.success("Project deleted.");
     router.push("/projects");
   };
 

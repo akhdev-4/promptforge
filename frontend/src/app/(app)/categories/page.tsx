@@ -6,9 +6,11 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useConfirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 import {
   useCreateCategory,
   useDeleteCategory,
@@ -93,6 +95,8 @@ export default function CategoriesPage() {
 
   const create = useCreateCategory();
   const del = useDeleteCategory();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [name, setName] = React.useState("");
   const [parentId, setParentId] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -116,11 +120,17 @@ export default function CategoriesPage() {
     const kids = node.children?.length
       ? ` and its ${node.children.length} subcategor${node.children.length === 1 ? "y" : "ies"}`
       : "";
-    if (!window.confirm(`Delete “${node.name}”${kids}? Prompts stay, but lose this category.`))
-      return;
+    const ok = await confirm({
+      title: `Delete “${node.name}”?`,
+      description: `This removes the category${kids}. Prompts stay, but lose this category.`,
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     setDeletingId(node.id);
     try {
       await del.mutateAsync(node.id);
+      toast.success("Category deleted.");
     } finally {
       setDeletingId(null);
     }

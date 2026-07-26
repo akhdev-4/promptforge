@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import * as React from "react";
 
+import { ConfirmProvider } from "@/components/ui/confirm";
+import { ToastProvider } from "@/components/ui/toast";
 import { useAuthStore } from "@/stores/auth";
 
 function AuthHydrator({ children }: { children: React.ReactNode }) {
@@ -36,7 +38,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <AuthHydrator>{children}</AuthHydrator>
+        <ToastProvider>
+          <ConfirmProvider>
+            <AuthHydrator>{children}</AuthHydrator>
+          </ConfirmProvider>
+        </ToastProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

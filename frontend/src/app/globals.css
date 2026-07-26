@@ -361,6 +361,16 @@ body {
   .pf-walk { animation: none; }
 }
 
+/* --- Toast entrance --- */
+@keyframes pf-toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.pf-toast { animation: pf-toast-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pf-toast { animation: none; }
+}
+
 /* --- Premium Library scene: dev sends prompt cards → books fill the shelf --- */
 @keyframes pf-card-send {
   0%   { opacity: 0; transform: translate(0, 6px) scale(0.94); }

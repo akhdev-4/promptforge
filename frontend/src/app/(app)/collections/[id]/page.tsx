@@ -8,7 +8,9 @@ import * as React from "react";
 import { PromptCard } from "@/components/prompts/prompt-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 import {
   useCollection,
   useDeleteCollection,
@@ -23,6 +25,8 @@ export default function CollectionDetailPage() {
 
   const { data: collection, isLoading, isError } = useCollection(id);
   const del = useDeleteCollection();
+  const confirm = useConfirm();
+  const toast = useToast();
   const removeItem = useRemoveFromCollection(id);
   const [copied, setCopied] = React.useState(false);
 
@@ -56,8 +60,15 @@ export default function CollectionDetailPage() {
   };
 
   const onDelete = async () => {
-    if (!window.confirm("Delete this collection?")) return;
+    const ok = await confirm({
+      title: "Delete collection?",
+      description: "This removes the collection. The prompts inside it are not deleted.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
     await del.mutateAsync(collection.id);
+    toast.success("Collection deleted.");
     router.push("/collections");
   };
 
