@@ -12,7 +12,7 @@ from app.models.enums import PromptStatus
 from app.models.project import Component, Module, Project
 from app.models.prompt import Prompt
 from app.models.team import PromptTeam
-from app.models.template import ProjectTemplate
+from app.models.template import ProjectTemplate, TemplatePreview
 from app.models.user import User
 from app.repositories.base import BaseRepository
 from app.schemas.project import ProjectAuthor
@@ -20,6 +20,7 @@ from app.schemas.template import (
     ManifestComponent,
     ManifestModule,
     ManifestPrompt,
+    PreviewCreate,
     PublicTemplateManifest,
     PublicTemplateSummary,
     TemplateUpsert,
@@ -36,6 +37,7 @@ class TemplateService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.templates = BaseRepository(ProjectTemplate, session)
+        self.previews = BaseRepository(TemplatePreview, session)
         self.projects = ProjectService(session)
 
     # --- Owner management ----------------------------------------------------
@@ -67,6 +69,36 @@ class TemplateService:
         if existing is None:
             raise NotFoundError("This project is not a template")
         await self.templates.delete(existing)
+
+    # --- Previews (screenshots of the running UI) ----------------------------
+    async def list_previews(self, project_id: uuid.UUID) -> list[TemplatePreview]:
+        stmt = (
+            select(TemplatePreview)
+            .where(TemplatePreview.project_id == project_id)
+            .order_by(TemplatePreview.position, TemplatePreview.created_at)
+        )
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def add_preview(
+        self, project_id: uuid.UUID, user: User, data: PreviewCreate
+    ) -> TemplatePreview:
+        await self.projects._owned_project(project_id, user)
+        count = await self.previews.count(project_id=project_id)
+        return await self.previews.create(
+            project_id=project_id,
+            url=data.url,
+            caption=data.caption,
+            position=count,
+        )
+
+    async def remove_preview(
+        self, project_id: uuid.UUID, preview_id: uuid.UUID, user: User
+    ) -> None:
+        await self.projects._owned_project(project_id, user)
+        preview = await self.previews.get(preview_id)
+        if preview is None or preview.project_id != project_id:
+            raise NotFoundError("Preview not found")
+        await self.previews.delete(preview)
 
     # --- Public catalog ------------------------------------------------------
     async def _prompt_counts(self, project_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:

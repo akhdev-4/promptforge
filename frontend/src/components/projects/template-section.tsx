@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TemplatePreviews } from "@/components/projects/template-previews";
 import { projectKeys, useProjectTemplate } from "@/hooks/use-projects";
 import { ApiError } from "@/lib/api";
 import { KIT_CATEGORIES, KIT_CATEGORY_LABEL } from "@/lib/kit-categories";
@@ -120,6 +121,8 @@ export function TemplateSection({
             </Button>
           </div>
         ) : null}
+
+        <TemplatePreviews projectId={projectId} canManage={canManage} />
       </CardContent>
     </Card>
   );

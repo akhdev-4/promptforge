@@ -23,7 +23,13 @@ from app.schemas.project import (
     ProjectTree,
     ProjectUpdate,
 )
-from app.schemas.template import PublicTemplateSummary, TemplateRead, TemplateUpsert
+from app.schemas.template import (
+    PreviewCreate,
+    PreviewRead,
+    PublicTemplateSummary,
+    TemplateRead,
+    TemplateUpsert,
+)
 from app.services.codebase import ArchiveUnavailableError, UnsupportedRepoError, open_archive
 from app.services.project import ProjectService
 from app.services.template import TemplateService
@@ -160,6 +166,41 @@ async def upsert_template(
 )
 async def delete_template(project_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
     await TemplateService(db).remove(project_id, user)
+
+
+# --- Codebase UI previews (screenshots) -------------------------------------
+@router.get(
+    "/{project_id}/template/previews",
+    response_model=list[PreviewRead],
+    summary="List a kit's UI preview screenshots",
+)
+async def list_previews(project_id: uuid.UUID, db: DbSession) -> list[PreviewRead]:
+    previews = await TemplateService(db).list_previews(project_id)
+    return [PreviewRead.model_validate(p) for p in previews]
+
+
+@router.post(
+    "/{project_id}/template/previews",
+    response_model=PreviewRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add a UI preview screenshot (owner only)",
+)
+async def add_preview(
+    project_id: uuid.UUID, data: PreviewCreate, db: DbSession, user: CurrentUser
+) -> PreviewRead:
+    preview = await TemplateService(db).add_preview(project_id, user, data)
+    return PreviewRead.model_validate(preview)
+
+
+@router.delete(
+    "/{project_id}/template/previews/{preview_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a UI preview (owner only)",
+)
+async def delete_preview(
+    project_id: uuid.UUID, preview_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> None:
+    await TemplateService(db).remove_preview(project_id, preview_id, user)
 
 
 # --- Modules ----------------------------------------------------------------

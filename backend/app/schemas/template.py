@@ -20,6 +20,21 @@ class TemplateUpsert(BaseModel):
     notes: str | None = None
 
 
+class PreviewCreate(BaseModel):
+    # No max_length — may carry a compact inline data: URL (uploaded screenshot).
+    url: str = Field(min_length=1, description="Image URL or inline data: URL")
+    caption: str | None = Field(default=None, max_length=120)
+
+
+class PreviewRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    url: str
+    caption: str | None
+    position: int
+
+
 class TemplateRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

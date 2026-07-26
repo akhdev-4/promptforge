@@ -10,6 +10,7 @@ import type {
   ProjectSummary,
   ProjectTemplate,
   ProjectTree,
+  TemplatePreview,
   TemplateUpsertInput,
 } from "@/types";
 
@@ -64,4 +65,17 @@ export const projectsApi = {
   /** Direct URL for the browser to download a kit's codebase zip. */
   templateDownloadUrl: (id: string, ref?: string) =>
     apiUrl(`/projects/${id}/template/download${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`),
+
+  // --- Codebase UI previews (screenshots) ---
+  listPreviews: (id: string) =>
+    apiFetch<TemplatePreview[]>(`/projects/${id}/template/previews`, { auth: false }),
+
+  addPreview: (id: string, data: { url: string; caption?: string | null }) =>
+    apiFetch<TemplatePreview>(`/projects/${id}/template/previews`, {
+      method: "POST",
+      body: data,
+    }),
+
+  removePreview: (id: string, previewId: string) =>
+    apiFetch<void>(`/projects/${id}/template/previews/${previewId}`, { method: "DELETE" }),
 };

@@ -233,6 +233,44 @@ async def test_web_browse_route_is_public(client: AsyncClient) -> None:
     assert resp.status_code == 404
 
 
+@pytest.mark.asyncio
+async def test_template_previews(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    _, other = await make_user(client)
+    s = await _scaffold(client, headers)
+    pid = s["project"]["id"]
+
+    added = await client.post(
+        f"{PROJECTS}/{pid}/template/previews",
+        json={"url": "data:image/png;base64,abc", "caption": "Login"},
+        headers=headers,
+    )
+    assert added.status_code == 201, added.text
+    preview = added.json()
+    assert preview["caption"] == "Login"
+    assert preview["position"] == 0
+
+    # Listing is public (Codebase tab reads it without auth).
+    listing = await client.get(f"{PROJECTS}/{pid}/template/previews")
+    assert listing.status_code == 200
+    assert len(listing.json()) == 1
+
+    # Non-owners cannot add.
+    denied = await client.post(
+        f"{PROJECTS}/{pid}/template/previews",
+        json={"url": "data:image/png;base64,xyz"},
+        headers=other,
+    )
+    assert denied.status_code == 403
+
+    # Owner deletes.
+    deleted = await client.delete(
+        f"{PROJECTS}/{pid}/template/previews/{preview['id']}", headers=headers
+    )
+    assert deleted.status_code == 204
+    assert (await client.get(f"{PROJECTS}/{pid}/template/previews")).json() == []
+
+
 def test_github_archive_url_builder() -> None:
     expected = "https://github.com/acme/store/archive/main.zip"
     # Bare, and the shapes people paste from the browser all normalize the same.

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base_class import Base
@@ -36,3 +36,21 @@ class ProjectTemplate(UUIDMixin, TimestampMixin, Base):
     setup_command: Mapped[str | None] = mapped_column(String(300))
     # Free-form extra instructions (Markdown allowed).
     notes: Mapped[str | None] = mapped_column(Text)
+
+
+class TemplatePreview(UUIDMixin, TimestampMixin, Base):
+    """A screenshot of the kit's running UI (login, products, cart, …).
+
+    Its own table so it auto-creates without an ALTER. ``url`` is Text so it can
+    hold either an external image URL or a compact inline data: URL (uploaded
+    and resized client-side).
+    """
+
+    __tablename__ = "template_previews"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    caption: Mapped[str | None] = mapped_column(String(120))
+    position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

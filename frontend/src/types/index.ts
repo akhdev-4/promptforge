@@ -281,6 +281,13 @@ export interface ProjectTemplate {
   updated_at: string;
 }
 
+export interface TemplatePreview {
+  id: string;
+  url: string;
+  caption: string | null;
+  position: number;
+}
+
 export interface TemplateUpsertInput {
   repo_url: string;
   category?: KitCategory | null;
