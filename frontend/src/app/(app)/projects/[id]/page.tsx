@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowLeft, Boxes, Layers, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Layers, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 
+import { ProjectComponentRow } from "@/components/projects/component-variants";
 import { TemplateSection } from "@/components/projects/template-section";
 import { Badge } from "@/components/ui/badge";
 import { useConfirm } from "@/components/ui/confirm";
@@ -217,30 +218,15 @@ export default function ProjectDetailPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {module.components.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="space-y-2">
                     {module.components.map((comp) => (
-                      <div
+                      <ProjectComponentRow
                         key={comp.id}
-                        className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Boxes className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{comp.name}</span>
-                          <Badge variant="secondary">{comp.prompt_count}</Badge>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/prompts?component_id=${comp.id}`}>Variants</Link>
-                          </Button>
-                          {user && (
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/prompts/new?component_id=${comp.id}`}>
-                                <Plus className="h-3.5 w-3.5" />
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                        id={comp.id}
+                        name={comp.name}
+                        promptCount={comp.prompt_count}
+                        canAddVariant={Boolean(user)}
+                      />
                     ))}
                   </div>
                 ) : (
