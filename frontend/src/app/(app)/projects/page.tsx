@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { useCreateProject, useProjects, useStarterKits } from "@/hooks/use-projects";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
@@ -20,6 +21,7 @@ export default function ProjectsPage() {
   const create = useCreateProject();
   const user = useAuthStore((s) => s.user);
   const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const [filter, setFilter] = React.useState<"all" | "codebase">("all");
 
   const codebaseIds = React.useMemo(
@@ -29,8 +31,12 @@ export default function ProjectsPage() {
 
   const onCreate = async () => {
     if (!name.trim()) return;
-    await create.mutateAsync({ name: name.trim() });
+    await create.mutateAsync({
+      name: name.trim(),
+      description: description.trim() || undefined,
+    });
     setName("");
+    setDescription("");
   };
 
   const allItems = data?.items ?? [];
@@ -48,22 +54,30 @@ export default function ProjectsPage() {
       </div>
 
       {user && (
-        <div className="flex gap-2">
+        <div className="max-w-xl space-y-2 rounded-xl border border-border p-4">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onCreate()}
             placeholder="New project name (e.g. CRM Application)"
-            className="max-w-sm"
           />
-          <Button onClick={onCreate} disabled={create.isPending || !name.trim()}>
-            {create.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            Create
-          </Button>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description (optional) — what is this application?"
+            className="min-h-16"
+            maxLength={1000}
+          />
+          <div className="flex justify-end">
+            <Button onClick={onCreate} disabled={create.isPending || !name.trim()}>
+              {create.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              Create project
+            </Button>
+          </div>
         </div>
       )}
 
