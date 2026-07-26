@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, ExternalLink, Loader2, Package, Terminal, Trash2 } from "lucide-react";
 import * as React from "react";
 
@@ -10,14 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { projectKeys, useProjectTemplate } from "@/hooks/use-projects";
 import { ApiError } from "@/lib/api";
 import { KIT_CATEGORIES, KIT_CATEGORY_LABEL } from "@/lib/kit-categories";
 import { projectsApi } from "@/lib/projects-api";
 import type { KitCategory, ProjectTemplate, TemplateUpsertInput } from "@/types";
-
-function templateKey(id: string) {
-  return ["project-template", id] as const;
-}
 
 export function TemplateSection({
   projectId,
@@ -27,17 +24,7 @@ export function TemplateSection({
   canManage: boolean;
 }) {
   const qc = useQueryClient();
-  const { data: template, isLoading } = useQuery({
-    queryKey: templateKey(projectId),
-    queryFn: async (): Promise<ProjectTemplate | null> => {
-      try {
-        return await projectsApi.getTemplate(projectId);
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 404) return null;
-        throw e;
-      }
-    },
-  });
+  const { data: template, isLoading } = useProjectTemplate(projectId);
 
   const [editing, setEditing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -46,14 +33,14 @@ export function TemplateSection({
     mutationFn: (data: TemplateUpsertInput) => projectsApi.upsertTemplate(projectId, data),
     onSuccess: () => {
       setEditing(false);
-      void qc.invalidateQueries({ queryKey: templateKey(projectId) });
+      void qc.invalidateQueries({ queryKey: projectKeys.template(projectId) });
     },
     onError: (e) => setError(e instanceof ApiError ? e.message : "Couldn't save."),
   });
 
   const remove = useMutation({
     mutationFn: () => projectsApi.deleteTemplate(projectId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: templateKey(projectId) }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: projectKeys.template(projectId) }),
   });
 
   if (isLoading) return null;

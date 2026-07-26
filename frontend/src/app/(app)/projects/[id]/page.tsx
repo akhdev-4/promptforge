@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Boxes, Layers, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Boxes, Layers, Package, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TabBar } from "@/components/ui/tabs";
 import {
   useAddComponent,
   useAddModule,
   useDeleteProject,
+  useProjectTemplate,
   useProjectTree,
 } from "@/hooks/use-projects";
 import { useAuthStore } from "@/stores/auth";
@@ -55,9 +57,12 @@ export default function ProjectDetailPage() {
   const user = useAuthStore((s) => s.user);
 
   const { data: tree, isLoading } = useProjectTree(id);
+  const { data: template } = useProjectTemplate(id);
   const addModule = useAddModule(id);
   const addComponent = useAddComponent(id);
   const del = useDeleteProject();
+
+  const [tab, setTab] = React.useState<"prompts" | "codebase">("prompts");
 
   if (isLoading) {
     return (
@@ -82,6 +87,12 @@ export default function ProjectDetailPage() {
     router.push("/projects");
   };
 
+  const hasCodebase = Boolean(template);
+  const promptCount = tree.modules.reduce(
+    (n, m) => n + m.components.reduce((c, comp) => c + comp.prompt_count, 0),
+    0,
+  );
+
   return (
     <div className="space-y-6">
       <Link
@@ -93,7 +104,14 @@ export default function ProjectDetailPage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{tree.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight">{tree.name}</h1>
+            {hasCodebase && (
+              <Badge variant="secondary" className="gap-1">
+                <Package className="h-3 w-3" /> Has codebase
+              </Badge>
+            )}
+          </div>
           {tree.description && (
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{tree.description}</p>
           )}
@@ -109,76 +127,93 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
-      <TemplateSection projectId={tree.id} canManage={canManage} />
+      <TabBar
+        value={tab}
+        onChange={(v) => setTab(v as "prompts" | "codebase")}
+        tabs={[
+          { value: "prompts", label: "Prompts", count: promptCount },
+          { value: "codebase", label: "Codebase", dot: hasCodebase },
+        ]}
+      />
 
-      <div className="space-y-4">
-        {tree.modules.map((module) => (
-          <Card key={module.id}>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-primary" /> {module.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {module.components.length > 0 ? (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {module.components.map((comp) => (
-                    <div
-                      key={comp.id}
-                      className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Boxes className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">{comp.name}</span>
-                        <Badge variant="secondary">{comp.prompt_count}</Badge>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/prompts?component_id=${comp.id}`}>Variants</Link>
-                        </Button>
-                        {user && (
+      {tab === "prompts" ? (
+        <div className="space-y-4">
+          {tree.modules.map((module) => (
+            <Card key={module.id}>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" /> {module.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {module.components.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {module.components.map((comp) => (
+                      <div
+                        key={comp.id}
+                        className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Boxes className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">{comp.name}</span>
+                          <Badge variant="secondary">{comp.prompt_count}</Badge>
+                        </div>
+                        <div className="flex gap-1">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/prompts/new?component_id=${comp.id}`}>
-                              <Plus className="h-3.5 w-3.5" />
-                            </Link>
+                            <Link href={`/prompts?component_id=${comp.id}`}>Variants</Link>
                           </Button>
-                        )}
+                          {user && (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={`/prompts/new?component_id=${comp.id}`}>
+                                <Plus className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No components yet.</p>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No components yet.</p>
+                )}
 
-              {canManage && (
+                {canManage && (
+                  <InlineAdd
+                    placeholder="Add component (e.g. Login)"
+                    onAdd={(name) => addComponent.mutate({ moduleId: module.id, name })}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          ))}
+
+          {tree.modules.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No modules yet. {canManage ? "Add one below." : ""}
+            </p>
+          )}
+
+          {canManage && (
+            <Card className="border-dashed">
+              <CardContent className="p-4">
+                <p className="mb-2 text-sm font-medium">Add a module</p>
                 <InlineAdd
-                  placeholder="Add component (e.g. Login)"
-                  onAdd={(name) => addComponent.mutate({ moduleId: module.id, name })}
+                  placeholder="Module name (e.g. Authentication)"
+                  onAdd={(name) => addModule.mutate({ name })}
                 />
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {tree.modules.length === 0 && (
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : hasCodebase || canManage ? (
+        <TemplateSection projectId={tree.id} canManage={canManage} />
+      ) : (
+        <div className="rounded-xl border border-dashed border-border p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            No modules yet. {canManage ? "Add one below." : ""}
+            This project doesn&rsquo;t include a starter codebase.
           </p>
-        )}
-
-        {canManage && (
-          <Card className="border-dashed">
-            <CardContent className="p-4">
-              <p className="mb-2 text-sm font-medium">Add a module</p>
-              <InlineAdd
-                placeholder="Module name (e.g. Authentication)"
-                onAdd={(name) => addModule.mutate({ name })}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

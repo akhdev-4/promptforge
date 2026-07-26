@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { ApiError } from "@/lib/api";
 import { projectsApi } from "@/lib/projects-api";
 
 export const projectKeys = {
@@ -9,7 +10,24 @@ export const projectKeys = {
   list: ["projects", "list"] as const,
   components: ["projects", "components"] as const,
   tree: (id: string) => ["projects", "tree", id] as const,
+  template: (id: string) => ["project-template", id] as const,
 };
+
+/** A project's starter-template metadata, or `null` if it isn't a kit. */
+export function useProjectTemplate(id: string) {
+  return useQuery({
+    queryKey: projectKeys.template(id),
+    queryFn: async () => {
+      try {
+        return await projectsApi.getTemplate(id);
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    },
+    enabled: Boolean(id),
+  });
+}
 
 export function useProjects() {
   return useQuery({ queryKey: projectKeys.list, queryFn: () => projectsApi.list() });
