@@ -1,6 +1,6 @@
 "use client";
 
-import { Rocket, Sparkles } from "lucide-react";
+import { Download, Package, Rocket, Sparkles } from "lucide-react";
 import type * as React from "react";
 
 /** Small, self-contained SVG/CSS "live preview" scenes for the onboarding tour. */
@@ -286,7 +286,89 @@ function Finish() {
   );
 }
 
-const SCENES = [Welcome, Dashboard, LibraryScene, Build, Insights, Finish];
+function KitsScene() {
+  const kits = [
+    { emoji: "🛒", label: "E-commerce", tint: "from-violet-500 to-purple-500" },
+    { emoji: "📊", label: "Dashboard", tint: "from-blue-500 to-indigo-500" },
+    { emoji: "☁️", label: "SaaS", tint: "from-pink-500 to-rose-500" },
+  ];
+  return (
+    <div className="flex h-full w-full items-center justify-center gap-3 px-6 sm:gap-4">
+      {kits.map((k, i) => (
+        <div
+          key={k.label}
+          className="pf-fly w-28 overflow-hidden rounded-xl border border-border bg-card shadow-sm sm:w-32"
+          style={{ animationDelay: `${0.15 * i}s` }}
+        >
+          <div
+            className={`flex h-14 items-center justify-center bg-gradient-to-br ${k.tint} text-3xl`}
+          >
+            {k.emoji}
+          </div>
+          <div className="space-y-1.5 p-2.5">
+            <p className="text-xs font-semibold">{k.label}</p>
+            <div className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary">
+              <Download className="h-3 w-3 shrink-0" /> Download codebase
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DevToolsScene() {
+  return (
+    <div className="flex h-full w-full items-center justify-center px-6">
+      <div className="pf-onb-pop w-full max-w-md overflow-hidden rounded-xl border border-slate-700 shadow-lg">
+        <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+          <span className="ml-2 text-[10px] text-slate-400">PromptForge — your editor</span>
+        </div>
+        <div className="flex bg-slate-900">
+          <div className="w-24 shrink-0 space-y-1.5 border-r border-slate-800 p-2">
+            <div className="flex items-center gap-1 text-[9px] font-medium text-violet-300">
+              <Package className="h-3 w-3 shrink-0" /> Starter Kits
+            </div>
+            {["E-commerce", "Dashboard", "SaaS"].map((n) => (
+              <div
+                key={n}
+                className="truncate rounded bg-slate-800/70 px-1.5 py-1 text-[8px] text-slate-300"
+              >
+                {n}
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 space-y-2 p-3 font-mono">
+            <p className="text-[10px] text-green-400">$ promptforge pull ecommerce</p>
+            <p className="pf-fly text-[9px] text-slate-400" style={{ animationDelay: "0.4s" }}>
+              ✓ codebase in ./ecommerce
+            </p>
+            <p
+              className="pf-fly text-[10px] text-violet-300"
+              style={{ animationDelay: "0.9s" }}
+            >
+              <span className="pf-twinkle2 inline-block">▍</span> publish selection as prompt
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SCENES = [
+  Welcome,
+  Dashboard,
+  LibraryScene,
+  Build,
+  KitsScene,
+  DevToolsScene,
+  Insights,
+  Finish,
+];
 
 export function OnboardingScene({ index }: { index: number }) {
   const Scene = SCENES[index] ?? Welcome;

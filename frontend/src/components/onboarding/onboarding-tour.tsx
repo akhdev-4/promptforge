@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 
-const STORAGE_KEY = "pf_onboarding_v1_seen";
+const STORAGE_KEY = "pf_onboarding_v2_seen";
 
 interface Step {
   title: string;
@@ -55,6 +55,28 @@ const STEPS: Step[] = [
         Assemble applications from proven prompts:{" "}
         <strong>Projects → Modules → Components</strong>. And create <strong>Teams</strong>{" "}
         to share <strong>private</strong> prompts with a group.
+      </>
+    ),
+  },
+  {
+    title: "Starter Kits",
+    body: (
+      <>
+        Not just prompts — whole <strong>starter codebases</strong>, browsable by category
+        (E-commerce, Dashboard, SaaS…). Each kit bundles a real repo with the proven
+        prompts behind it. Hit <strong>Download codebase</strong> and start building on a
+        working foundation.
+      </>
+    ),
+  },
+  {
+    title: "Right inside your editor",
+    body: (
+      <>
+        Create an <strong>API key</strong> (Settings) and use PromptForge from the{" "}
+        <strong>VS Code extension</strong> or the <strong>CLI</strong>: browse kits,{" "}
+        <strong>pull a codebase</strong> into your workspace, insert prompts, and even{" "}
+        <strong>publish</strong> a prompt back — without leaving your editor.
       </>
     ),
   },
