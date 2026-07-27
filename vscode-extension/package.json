@@ -3,7 +3,7 @@
   "displayName": "PromptForge — Starter Kits",
   "description": "Browse PromptForge starter kits and prompts, and pull codebases into your workspace.",
   "version": "0.1.0",
-  "publisher": "akkdev-4",
+  "publisher": "DevAk",
   "engines": {
     "vscode": "^1.85.0"
   },
