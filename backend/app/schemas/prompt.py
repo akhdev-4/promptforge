@@ -84,6 +84,16 @@ class PromptCreate(PromptBase):
     team_id: uuid.UUID | None = None
 
 
+class PublicPromptCreate(BaseModel):
+    """Lean shape for publishing a prompt via the write-scoped public API."""
+
+    title: str = Field(min_length=1, max_length=200)
+    content: str = Field(min_length=1)
+    description: str | None = Field(default=None, max_length=1000)
+    prompt_type: PromptType = PromptType.OTHER
+    tags: list[str] = Field(default_factory=list, max_length=20)
+
+
 class PromptUpdate(BaseModel):
     """Metadata-only update — does not create a new version."""
 

@@ -7,22 +7,29 @@ can never reach team-private content or drafts.
 
 from __future__ import annotations
 
+import contextlib
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
-from app.api.deps import ApiKeyUser, DbSession
+from app.api.deps import ApiKeyUser, DbSession, WriteApiKeyUser
 from app.core.exceptions import NotFoundError
 from app.core.ratelimit import rate_limit
 from app.models.enums import KitCategory, PromptStatus, PromptType
 from app.repositories.prompt import SortKey
 from app.schemas.common import Page, PageParams
-from app.schemas.prompt import PromptDetail, PromptSummary
+from app.schemas.prompt import (
+    PromptCreate,
+    PromptDetail,
+    PromptSummary,
+    PublicPromptCreate,
+)
 from app.schemas.template import PublicTemplateManifest, PublicTemplateSummary
 from app.schemas.user import UserPublic
 from app.services.codebase import ArchiveUnavailableError, UnsupportedRepoError, open_archive
 from app.services.prompt import PromptService
+from app.services.semantic import SemanticSearchService
 from app.services.team import TeamService
 from app.services.template import TemplateService
 
@@ -64,6 +71,33 @@ async def list_prompts(
         sort=sort,
     )
     return Page.create([PromptSummary.model_validate(p) for p in items], total, params)
+
+
+@router.post(
+    "/prompts",
+    response_model=PromptSummary,
+    status_code=status.HTTP_201_CREATED,
+    summary="Publish a prompt (requires a write-scoped API key)",
+)
+async def publish_prompt(
+    data: PublicPromptCreate, db: DbSession, user: WriteApiKeyUser
+) -> PromptSummary:
+    prompt = await PromptService(db).create(
+        PromptCreate(
+            title=data.title,
+            content=data.content,
+            description=data.description,
+            prompt_type=data.prompt_type,
+            tags=data.tags,
+            status=PromptStatus.PUBLISHED,
+        ),
+        user,
+    )
+    # Index for semantic search, isolated so a failure never breaks publishing.
+    with contextlib.suppress(Exception):
+        async with db.begin_nested():
+            await SemanticSearchService(db).reembed(prompt)
+    return PromptSummary.model_validate(prompt)
 
 
 @router.get(

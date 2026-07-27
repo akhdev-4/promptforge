@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ApiKeyCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120, description="A label to recognize this key")
+    write: bool = Field(default=False, description="Grant publish (write) access")
 
 
 class ApiKeyRead(BaseModel):

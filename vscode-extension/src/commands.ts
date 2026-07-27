@@ -3,7 +3,16 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { Api, ApiError, Identity, Kit, KitManifest, PromptDetail, PromptSummary } from "./api";
+import {
+  Api,
+  ApiError,
+  Identity,
+  Kit,
+  KitManifest,
+  PromptDetail,
+  PromptSummary,
+  PublishedPrompt,
+} from "./api";
 import { extractZipStripped } from "./archive";
 import { setApiKey } from "./config";
 import { KitTreeItem } from "./kitsTree";
@@ -138,6 +147,59 @@ function writePromptsDoc(target: string, manifest: KitManifest): void {
     lines.push("");
   }
   fs.writeFileSync(path.join(target, "PROMPTFORGE.md"), lines.join("\n"), "utf-8");
+}
+
+const PROMPT_TYPES = [
+  "ui",
+  "frontend",
+  "backend",
+  "api",
+  "database",
+  "testing",
+  "documentation",
+  "other",
+];
+
+export async function publishPromptCommand(api: Api): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage("Open a file (and optionally select the prompt text) first.");
+    return;
+  }
+  const selection = editor.selection;
+  const content = (
+    selection && !selection.isEmpty
+      ? editor.document.getText(selection)
+      : editor.document.getText()
+  ).trim();
+  if (!content) {
+    vscode.window.showErrorMessage("Nothing to publish — the selection/file is empty.");
+    return;
+  }
+
+  const title = await vscode.window.showInputBox({
+    prompt: "Prompt title",
+    ignoreFocusOut: true,
+    value: content.split("\n")[0].slice(0, 80),
+  });
+  if (!title) return;
+
+  const type = await vscode.window.showQuickPick(PROMPT_TYPES, {
+    placeHolder: "Prompt type",
+    ignoreFocusOut: true,
+  });
+  if (!type) return;
+
+  try {
+    const published = await api.post<PublishedPrompt>("/prompts", {
+      title,
+      content,
+      prompt_type: type,
+    });
+    vscode.window.showInformationMessage(`Published "${published.title}" to PromptForge.`);
+  } catch (err) {
+    vscode.window.showErrorMessage(errorMessage(err));
+  }
 }
 
 export async function searchPromptsCommand(api: Api): Promise<void> {

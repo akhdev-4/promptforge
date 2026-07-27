@@ -35,7 +35,11 @@
         "title": "PromptForge: Pull Kit into Workspace",
         "icon": "$(cloud-download)"
       },
-      { "command": "promptforge.searchPrompts", "title": "PromptForge: Search Prompts" }
+      { "command": "promptforge.searchPrompts", "title": "PromptForge: Search Prompts" },
+      {
+        "command": "promptforge.publishPrompt",
+        "title": "PromptForge: Publish Selection as Prompt"
+      }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -58,6 +62,13 @@
           "command": "promptforge.pullKit",
           "when": "view == promptforgeKits && viewItem == kit",
           "group": "inline"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "promptforge.publishPrompt",
+          "when": "editorHasSelection",
+          "group": "9_cutcopypaste"
         }
       ]
     },

@@ -136,6 +136,36 @@ async def test_revoked_key_stops_working(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_publish_prompt_requires_write_scope(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    read_key = (await client.post(KEYS, json={"name": "ro"}, headers=headers)).json()["key"]
+    write_key = (
+        await client.post(KEYS, json={"name": "rw", "write": True}, headers=headers)
+    ).json()["key"]
+
+    payload = {
+        "title": "Published from the editor",
+        "content": "Build a thing that does the thing.",
+        "prompt_type": "backend",
+    }
+
+    # No key -> 401; read-only key -> 403; write key -> 201.
+    assert (await client.post(f"{PUBLIC}/prompts", json=payload)).status_code == 401
+    ro = await client.post(f"{PUBLIC}/prompts", json=payload, headers={"X-API-Key": read_key})
+    assert ro.status_code == 403
+    rw = await client.post(f"{PUBLIC}/prompts", json=payload, headers={"X-API-Key": write_key})
+    assert rw.status_code == 201, rw.text
+    created = rw.json()
+    assert created["title"] == payload["title"]
+
+    # The published prompt is now visible through the public read API.
+    listing = (
+        await client.get(f"{PUBLIC}/prompts", headers={"X-API-Key": read_key})
+    ).json()
+    assert any(p["id"] == created["id"] for p in listing["items"])
+
+
+@pytest.mark.asyncio
 async def test_cannot_revoke_another_users_key(client: AsyncClient) -> None:
     _, alice = await make_user(client)
     _, bob = await make_user(client)

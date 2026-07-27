@@ -94,6 +94,30 @@ async def get_api_key_user(
 ApiKeyUser = Annotated[User, Depends(get_api_key_user)]
 
 
+async def get_write_api_key_user(
+    db: DbSession,
+    key: Annotated[str | None, Depends(api_key_scheme)],
+) -> User:
+    """Authenticate a public-API request that needs *write* scope (publishing)."""
+    if not key:
+        raise AuthenticationError("Provide your API key in the X-API-Key header")
+    service = ApiKeyService(db)
+    api_key = await service.resolve(key)
+    if api_key is None:
+        raise AuthenticationError("Invalid or revoked API key")
+    user = await UserRepository(db).get(api_key.user_id)
+    if user is None or not user.is_active:
+        raise AuthenticationError("User not found or inactive")
+    if not service.has_scope(api_key, "write"):
+        raise PermissionDeniedError(
+            "This API key is read-only. Create a write-enabled key to publish."
+        )
+    return user
+
+
+WriteApiKeyUser = Annotated[User, Depends(get_write_api_key_user)]
+
+
 async def get_current_active_verified_user(user: CurrentUser) -> User:
     if not user.is_verified:
         raise PermissionDeniedError("Email verification required")

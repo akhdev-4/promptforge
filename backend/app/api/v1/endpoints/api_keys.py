@@ -30,7 +30,7 @@ async def list_keys(db: DbSession, user: CurrentUser) -> list[ApiKeyRead]:
     summary="Create an API key (secret shown once)",
 )
 async def create_key(data: ApiKeyCreate, db: DbSession, user: CurrentUser) -> ApiKeyCreated:
-    key, full_key = await ApiKeyService(db).create(user, data.name)
+    key, full_key = await ApiKeyService(db).create(user, data.name, write=data.write)
     return ApiKeyCreated(**ApiKeyRead.model_validate(key).model_dump(), key=full_key)
 
 

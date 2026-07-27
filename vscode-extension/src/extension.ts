@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import { Api } from "./api";
 import {
+  publishPromptCommand,
   pullKitCommand,
   searchPromptsCommand,
   setApiKeyCommand,
@@ -26,6 +27,9 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
     vscode.commands.registerCommand("promptforge.searchPrompts", () =>
       searchPromptsCommand(api),
+    ),
+    vscode.commands.registerCommand("promptforge.publishPrompt", () =>
+      publishPromptCommand(api),
     ),
   );
 }
