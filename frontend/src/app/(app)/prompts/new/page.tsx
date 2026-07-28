@@ -22,6 +22,7 @@ function NewPromptForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const componentId = searchParams.get("component_id");
+  const teamId = searchParams.get("team_id");
   const create = useCreatePrompt();
   const [error, setError] = React.useState<string | null>(null);
 
@@ -48,6 +49,7 @@ function NewPromptForm() {
         <p className="mt-1 text-sm text-muted-foreground">
           Capture a production-tested prompt. Version 1 is created automatically.
           {componentId && " This prompt will be added to the selected component."}
+          {teamId && " It will be private to your team."}
         </p>
       </div>
 
@@ -56,6 +58,7 @@ function NewPromptForm() {
         submitting={create.isPending}
         serverError={error}
         componentId={componentId}
+        teamId={teamId}
         onSubmit={onSubmit}
       />
     </div>

@@ -8,6 +8,7 @@ import {
   Loader2,
   Lock,
   Mail,
+  Plus,
   Trash2,
   UserPlus,
   Users,
@@ -261,8 +262,15 @@ export default function TeamDetailPage() {
 
         {/* Private prompts */}
         <div className="space-y-4 lg:col-span-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Lock className="h-4 w-4" /> Private prompts — visible only to this team.
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="h-4 w-4" /> Private prompts — visible only to this team.
+            </div>
+            <Button size="sm" asChild>
+              <Link href={`/prompts/new?team_id=${team.id}`}>
+                <Plus className="h-4 w-4" /> New team prompt
+              </Link>
+            </Button>
           </div>
           {prompts && prompts.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

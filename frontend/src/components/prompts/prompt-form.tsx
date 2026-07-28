@@ -61,6 +61,8 @@ interface PromptFormProps {
   serverError?: string | null;
   /** Pre-assign the prompt to a component (e.g. when adding a variant). */
   componentId?: string | null;
+  /** Pre-select "private to this team" visibility (e.g. from a team page). */
+  teamId?: string | null;
   onSubmit: (data: PromptCreateInput) => void;
 }
 
@@ -89,6 +91,7 @@ export function PromptForm({
   serverError,
   onSubmit,
   componentId,
+  teamId,
 }: PromptFormProps) {
   const { data: tree } = useCategoryTree();
   const { data: popularTags } = usePopularTags();
@@ -116,7 +119,7 @@ export function PromptForm({
       language: initial?.language ?? "",
       ai_model: initial?.ai_model ?? "",
       category_id: initial?.category?.id ?? "",
-      team_id: "",
+      team_id: mode === "create" ? (teamId ?? "") : "",
       estimated_tokens:
         initial?.estimated_tokens != null ? String(initial.estimated_tokens) : "",
       expected_output: initial?.expected_output ?? "",
