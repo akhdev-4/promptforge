@@ -259,6 +259,14 @@ export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
   members: TeamMember[];
 }
 
+/** Minimal public user shape used by the @username typeahead. */
+export interface UserSuggestion {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export interface TeamInvite {
   id: string;
   email: string;

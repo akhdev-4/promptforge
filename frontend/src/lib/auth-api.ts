@@ -1,7 +1,7 @@
 /** Auth-related API calls, thin wrappers over `apiFetch`. */
 
 import { apiFetch } from "@/lib/api";
-import type { RecommendationItem, TokenPair, User } from "@/types";
+import type { RecommendationItem, TokenPair, User, UserSuggestion } from "@/types";
 
 export interface RegisterInput {
   email: string;
@@ -33,4 +33,10 @@ export const authApi = {
 
   recommendations: (limit = 12) =>
     apiFetch<RecommendationItem[]>(`/users/me/recommendations?limit=${limit}`),
+
+  /** Username typeahead (A→Z, excludes you). Empty `q` lists the first page. */
+  searchUsers: (q: string, limit = 8) =>
+    apiFetch<UserSuggestion[]>(
+      `/users/search?limit=${limit}${q ? `&q=${encodeURIComponent(q)}` : ""}`,
+    ),
 };

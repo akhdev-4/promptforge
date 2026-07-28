@@ -96,3 +96,26 @@ async def test_admin_only_list_forbidden_for_contributor(client: AsyncClient) ->
     )
     assert resp.status_code == 403
     assert resp.json()["code"] == "permission_denied"
+
+
+@pytest.mark.asyncio
+async def test_user_search_is_alphabetical_and_excludes_self(client: AsyncClient) -> None:
+    from tests.conftest import make_user
+
+    me, headers = await make_user(client)
+    # Register a few known usernames out of alphabetical order.
+    for name in ("zoe_pick", "alpha_pick", "mid_pick"):
+        await _register(client, email=f"{name}@x.io", username=name, password="password123")
+
+    resp = await client.get("/api/v1/users/search?q=_pick&limit=25", headers=headers)
+    assert resp.status_code == 200
+    names = [u["username"] for u in resp.json()]
+    assert names == ["alpha_pick", "mid_pick", "zoe_pick"]  # ascending
+    assert me["username"] not in names  # never suggests yourself
+
+    # Partial match filters the list.
+    only = await client.get("/api/v1/users/search?q=alpha", headers=headers)
+    assert [u["username"] for u in only.json()] == ["alpha_pick"]
+
+    # Requires authentication.
+    assert (await client.get("/api/v1/users/search")).status_code == 401

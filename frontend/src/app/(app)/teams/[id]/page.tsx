@@ -19,6 +19,7 @@ import { useParams } from "next/navigation";
 import * as React from "react";
 
 import { PromptCard } from "@/components/prompts/prompt-card";
+import { UsernamePicker } from "@/components/teams/username-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -199,12 +200,11 @@ export default function TeamDetailPage() {
 
                 {/* Quick add an existing member by username */}
                 <div className="flex gap-2">
-                  <Input
+                  <UsernamePicker
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && onAdd()}
-                    placeholder="or add @username"
-                    className="h-9"
+                    onChange={setUsername}
+                    onSubmit={onAdd}
+                    excludeUsernames={team.members.map((m) => m.username)}
                   />
                   <Button
                     size="sm"

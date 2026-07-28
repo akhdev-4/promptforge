@@ -123,6 +123,22 @@ async def list_users(
     return Page.create([UserRead.model_validate(u) for u in users], total, params)
 
 
+# Declared before "/{user_id}" so the literal path isn't parsed as a UUID.
+@router.get(
+    "/search",
+    response_model=list[UserPublic],
+    summary="Find users by username (for @mentions / member pickers)",
+)
+async def search_users(
+    db: DbSession,
+    user: CurrentUser,
+    q: str | None = Query(None, description="Partial username; empty lists the first page"),
+    limit: int = Query(8, ge=1, le=25),
+) -> list[UserPublic]:
+    users = await UserRepository(db).search_usernames(q, limit=limit, exclude_id=user.id)
+    return [UserPublic.model_validate(u) for u in users]
+
+
 @router.get("/{user_id}", response_model=UserPublic, summary="Public profile")
 async def read_user(user_id: uuid.UUID, db: DbSession) -> UserPublic:
     user = await UserRepository(db).get(user_id)
