@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { useSpeechRecognition } from "@/hooks/use-speech";
+import { parseIntent, sortPrompts } from "@/lib/assistant-intent";
 import { promptsApi } from "@/lib/prompts-api";
 import { promptTypeLabels } from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,12 @@ interface Msg {
 }
 
 const GREETINGS = new Set(["hi", "hello", "hey", "yo", "hola", "sup", "thanks", "thank"]);
-const SUGGESTIONS = ["Login page UI", "Stripe checkout", "Anime portrait", "Product API"];
+const SUGGESTIONS = [
+  "Top rated photo editing",
+  "Most copied login UI",
+  "Stripe checkout",
+  "Newest API prompts",
+];
 
 let msgSeq = 0;
 const nextId = () => `m${++msgSeq}`;
@@ -75,14 +81,29 @@ export function PromptAssistant() {
     }
 
     try {
-      const results = await promptsApi.semantic(clean, 4);
-      if (results.length === 0) {
-        bot(`I couldn't find a close match for “${clean}”. Try describing it a different way.`);
+      const { topic, sort, sortLabel } = parseIntent(clean);
+      let results: PromptSummary[];
+      if (topic) {
+        // Find topically-relevant prompts by meaning, then rank by intent.
+        const pool = await promptsApi.semantic(topic, sort ? 16 : 6);
+        results = (sort ? sortPrompts(pool, sort) : pool).slice(0, 4);
+      } else if (sort) {
+        // Pure ranking query ("show me the top rated prompts").
+        const page = await promptsApi.list({ sort, size: 4 });
+        results = page.items;
       } else {
+        results = await promptsApi.semantic(clean, 4);
+      }
+
+      if (results.length === 0) {
+        bot(`I couldn't find a match for “${clean}”. Try describing it a different way.`);
+      } else {
+        const kind = sortLabel ? `${sortLabel} ` : "";
+        const about = topic ? ` for “${topic}”` : "";
         bot(
-          `Here ${results.length === 1 ? "is" : "are"} ${results.length} prompt${
+          `Here ${results.length === 1 ? "is" : "are"} ${results.length} ${kind}prompt${
             results.length === 1 ? "" : "s"
-          } that match. Tap one to open it:`,
+          }${about}. Tap one to open it:`,
           results,
         );
       }
