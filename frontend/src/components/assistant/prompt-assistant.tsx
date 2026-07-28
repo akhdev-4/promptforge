@@ -1,25 +1,58 @@
 "use client";
 
-import { Loader2, Mic, Play, Send, Sparkles, X } from "lucide-react";
+import {
+  BookMarked,
+  FolderKanban,
+  Loader2,
+  Mic,
+  Package,
+  Play,
+  Send,
+  Sparkles,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { useSpeechRecognition } from "@/hooks/use-speech";
-import { parseIntent, sortPrompts } from "@/lib/assistant-intent";
+import {
+  keywordScore,
+  parseIntent,
+  sortPrompts,
+  topicWords,
+} from "@/lib/assistant-intent";
+import { collectionsApi } from "@/lib/collections-api";
+import { projectsApi } from "@/lib/projects-api";
 import { promptsApi } from "@/lib/prompts-api";
 import { promptTypeLabels } from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import type { PromptSummary } from "@/types";
+import type { Collection, KitTemplate, ProjectSummary, PromptSummary } from "@/types";
+
+/** A matched non-prompt resource (kit / project / collection). */
+interface ResourceHit {
+  kind: "kit" | "project" | "collection";
+  href: string;
+  title: string;
+  subtitle: string;
+}
 
 interface Msg {
   id: string;
   role: "bot" | "user";
   text: string;
   results?: PromptSummary[];
+  extras?: ResourceHit[];
 }
+
+const RESOURCE_ICON = {
+  kit: Package,
+  project: FolderKanban,
+  collection: BookMarked,
+} as const;
+const RESOURCE_LABEL = { kit: "Starter Kit", project: "Project", collection: "Collection" };
 
 const GREETINGS = new Set(["hi", "hello", "hey", "yo", "hola", "sup", "thanks", "thank"]);
 const SUGGESTIONS = [
@@ -61,8 +94,82 @@ export function PromptAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  const bot = (text: string, results?: PromptSummary[]) =>
-    setMessages((m) => [...m, { id: nextId(), role: "bot", text, results }]);
+  const bot = (text: string, results?: PromptSummary[], extras?: ResourceHit[]) =>
+    setMessages((m) => [...m, { id: nextId(), role: "bot", text, results, extras }]);
+
+  // Kits/projects/collections are fetched once and cached for keyword matching.
+  const catalogRef = React.useRef<{
+    kits: KitTemplate[];
+    projects: ProjectSummary[];
+    collections: Collection[];
+  } | null>(null);
+
+  const findResources = async (topic: string): Promise<ResourceHit[]> => {
+    const words = topicWords(topic);
+    if (words.length === 0) return [];
+    if (!catalogRef.current) {
+      const [kits, projects, collections] = await Promise.all([
+        projectsApi.browseTemplates().then((p) => p.items).catch(() => []),
+        projectsApi.list().then((p) => p.items).catch(() => []),
+        collectionsApi.listPublic().then((p) => p.items).catch(() => []),
+      ]);
+      catalogRef.current = { kits, projects, collections };
+    }
+    const cat = catalogRef.current;
+    const kitProjectIds = new Set(cat.kits.map((k) => k.project_id));
+    const scored: { hit: ResourceHit; score: number }[] = [];
+
+    for (const k of cat.kits) {
+      const s = keywordScore(
+        `${k.name} ${k.description ?? ""} ${k.stack ?? ""} ${k.category ?? ""}`,
+        words,
+      );
+      if (s > 0) {
+        scored.push({
+          score: s + 1, // nudge kits ahead — they're the richest resource
+          hit: {
+            kind: "kit",
+            href: `/projects/${k.project_id}`,
+            title: k.name,
+            subtitle: k.stack ?? k.description ?? "Starter codebase",
+          },
+        });
+      }
+    }
+    for (const p of cat.projects) {
+      if (kitProjectIds.has(p.id)) continue; // already surfaced as a kit
+      const s = keywordScore(`${p.name} ${p.description ?? ""}`, words);
+      if (s > 0) {
+        scored.push({
+          score: s,
+          hit: {
+            kind: "project",
+            href: `/projects/${p.id}`,
+            title: p.name,
+            subtitle: p.description ?? "Project",
+          },
+        });
+      }
+    }
+    for (const c of cat.collections) {
+      const s = keywordScore(`${c.name} ${c.description ?? ""}`, words);
+      if (s > 0) {
+        scored.push({
+          score: s,
+          hit: {
+            kind: "collection",
+            href: `/collections/${c.id}`,
+            title: c.name,
+            subtitle: c.description ?? `${c.item_count} prompts`,
+          },
+        });
+      }
+    }
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((s) => s.hit);
+  };
 
   const respond = async (text: string) => {
     const clean = text.trim();
@@ -95,8 +202,12 @@ export function PromptAssistant() {
         results = await promptsApi.semantic(clean, 4);
       }
 
-      if (results.length === 0) {
+      const extras = topic ? await findResources(topic) : [];
+
+      if (results.length === 0 && extras.length === 0) {
         bot(`I couldn't find a match for “${clean}”. Try describing it a different way.`);
+      } else if (results.length === 0) {
+        bot(`No prompt matched, but here's what fits “${topic}” in PromptForge:`, undefined, extras);
       } else {
         const kind = sortLabel ? `${sortLabel} ` : "";
         const about = topic ? ` for “${topic}”` : "";
@@ -105,6 +216,7 @@ export function PromptAssistant() {
             results.length === 1 ? "" : "s"
           }${about}. Tap one to open it:`,
           results,
+          extras,
         );
       }
     } catch {
@@ -215,6 +327,37 @@ export function PromptAssistant() {
                         the Playground →
                       </Link>
                     </>
+                  )}
+                  {m.extras && m.extras.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        Also in PromptForge
+                      </p>
+                      {m.extras.map((r) => {
+                        const Icon = RESOURCE_ICON[r.kind];
+                        return (
+                          <Link
+                            key={r.href}
+                            href={r.href}
+                            onClick={() => setOpen(false)}
+                            className="flex items-start gap-2 rounded-lg border border-border bg-background p-2.5 transition-colors hover:border-primary/40"
+                          >
+                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <div className="min-w-0">
+                              <p className="line-clamp-1 text-sm font-medium text-foreground">
+                                {r.title}
+                                <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
+                                  {RESOURCE_LABEL[r.kind]}
+                                </span>
+                              </p>
+                              <p className="line-clamp-1 text-xs text-muted-foreground">
+                                {r.subtitle}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>

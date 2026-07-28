@@ -69,3 +69,14 @@ export function sortPrompts(list: PromptSummary[], sort: PromptSort): PromptSumm
   const cmp = COMPARATORS[sort];
   return cmp ? [...list].sort(cmp) : list;
 }
+
+/** Meaningful topic words (len ≥ 3) used to match non-prompt resources. */
+export function topicWords(topic: string): string[] {
+  return topic.split(/\s+/).filter((w) => w.length >= 3);
+}
+
+/** How many topic words appear in ``text`` (case-insensitive substring). */
+export function keywordScore(text: string, words: string[]): number {
+  const t = text.toLowerCase();
+  return words.reduce((n, w) => (t.includes(w) ? n + 1 : n), 0);
+}
