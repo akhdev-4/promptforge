@@ -8,10 +8,54 @@ from fastapi import APIRouter, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.schemas.prompt import PromptSummary
-from app.schemas.team import AddMember, TeamCreate, TeamDetail, TeamSummary
+from app.schemas.team import (
+    AddMember,
+    InviteCreate,
+    InviteCreated,
+    InviteRead,
+    TeamCreate,
+    TeamDetail,
+    TeamSummary,
+)
 from app.services.team import TeamService
 
 router = APIRouter()
+
+
+@router.post(
+    "/{team_id}/invites",
+    response_model=InviteCreated,
+    status_code=status.HTTP_201_CREATED,
+    summary="Invite someone to a team by email (owner only)",
+)
+async def invite_member(
+    team_id: uuid.UUID, data: InviteCreate, db: DbSession, user: CurrentUser
+) -> InviteCreated:
+    invite, link, sent = await TeamService(db).create_invite(team_id, user, data.email)
+    return InviteCreated(**InviteRead.model_validate(invite).model_dump(), link=link, email_sent=sent)
+
+
+@router.get(
+    "/{team_id}/invites",
+    response_model=list[InviteRead],
+    summary="Pending invites for a team (members only)",
+)
+async def list_invites(
+    team_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> list[InviteRead]:
+    invites = await TeamService(db).list_invites(team_id, user)
+    return [InviteRead.model_validate(i) for i in invites]
+
+
+@router.delete(
+    "/{team_id}/invites/{invite_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke a pending invite (owner only)",
+)
+async def revoke_invite(
+    team_id: uuid.UUID, invite_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> None:
+    await TeamService(db).revoke_invite(team_id, user, invite_id)
 
 
 @router.get("", response_model=list[TeamSummary], summary="My teams")

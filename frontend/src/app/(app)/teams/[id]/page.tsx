@@ -1,6 +1,18 @@
 "use client";
 
-import { ArrowLeft, Crown, Loader2, Lock, UserPlus, Users, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Crown,
+  Loader2,
+  Lock,
+  Mail,
+  Trash2,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import * as React from "react";
@@ -11,8 +23,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useAddMember,
+  useInviteMember,
+  useRemoveMember,
+  useRevokeInvite,
+  useTeam,
+  useTeamInvites,
+  useTeamPrompts,
+} from "@/hooks/use-teams";
 import { ApiError } from "@/lib/api";
-import { useAddMember, useRemoveMember, useTeam, useTeamPrompts } from "@/hooks/use-teams";
+import type { InviteCreated } from "@/types";
 
 function initials(m: { full_name: string | null; username: string | null }): string {
   const base = (m.full_name?.trim() || m.username?.trim() || "?").split(/\s+/);
@@ -23,10 +44,16 @@ export default function TeamDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: team, isLoading, isError } = useTeam(id);
   const { data: prompts } = useTeamPrompts(id);
+  const { data: invites } = useTeamInvites(id, Boolean(team?.is_owner));
   const addMember = useAddMember(id);
   const removeMember = useRemoveMember(id);
+  const invite = useInviteMember(id);
+  const revokeInvite = useRevokeInvite(id);
   const [username, setUsername] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [fresh, setFresh] = React.useState<InviteCreated | null>(null);
+  const [copied, setCopied] = React.useState(false);
 
   const onAdd = async () => {
     if (!username.trim()) return;
@@ -37,6 +64,24 @@ export default function TeamDetailPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't add that user.");
     }
+  };
+
+  const onInvite = async () => {
+    if (!email.trim()) return;
+    setError(null);
+    try {
+      const created = await invite.mutateAsync(email.trim());
+      setFresh(created);
+      setEmail("");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't send that invite.");
+    }
+  };
+
+  const copyLink = async (link: string) => {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   if (isLoading) {
@@ -76,16 +121,97 @@ export default function TeamDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {team.is_owner && (
-              <div className="space-y-1">
+              <div className="space-y-2">
+                {/* Invite by email */}
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onInvite()}
+                    placeholder="Invite by email…"
+                    className="h-9"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={onInvite}
+                    disabled={invite.isPending || !email.trim()}
+                    title="Send invite"
+                  >
+                    {invite.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Mail className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {/* Freshly created invite — share the link */}
+                {fresh && (
+                  <div className="space-y-1 rounded-lg border border-primary/30 bg-primary/5 p-2 text-xs">
+                    <p className="font-medium">
+                      {fresh.email_sent
+                        ? `Invite emailed to ${fresh.email}.`
+                        : "Invite created — share this link:"}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1">
+                        {fresh.link}
+                      </code>
+                      <button
+                        onClick={() => copyLink(fresh.link)}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
+                        aria-label="Copy link"
+                      >
+                        {copied ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending invites */}
+                {invites && invites.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      Pending invites
+                    </p>
+                    {invites.map((inv) => (
+                      <div key={inv.id} className="flex items-center gap-1 text-xs">
+                        <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 truncate">{inv.email}</span>
+                        <button
+                          onClick={() => revokeInvite.mutate(inv.id)}
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          aria-label="Revoke invite"
+                          title="Revoke"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Quick add an existing member by username */}
                 <div className="flex gap-2">
                   <Input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && onAdd()}
-                    placeholder="@username"
+                    placeholder="or add @username"
                     className="h-9"
                   />
-                  <Button size="sm" onClick={onAdd} disabled={addMember.isPending || !username.trim()}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onAdd}
+                    disabled={addMember.isPending || !username.trim()}
+                    title="Add existing user"
+                  >
                     {addMember.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
@@ -93,6 +219,7 @@ export default function TeamDetailPage() {
                     )}
                   </Button>
                 </div>
+
                 {error && <p className="text-xs text-destructive">{error}</p>}
               </div>
             )}

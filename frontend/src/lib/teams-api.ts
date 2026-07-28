@@ -1,7 +1,14 @@
 /** Teams / workspaces API. */
 
 import { apiFetch } from "@/lib/api";
-import type { PromptSummary, TeamDetail, TeamSummary } from "@/types";
+import type {
+  InviteCreated,
+  InviteInfo,
+  PromptSummary,
+  TeamDetail,
+  TeamInvite,
+  TeamSummary,
+} from "@/types";
 
 export const teamsApi = {
   list: () => apiFetch<TeamSummary[]>("/teams"),
@@ -16,4 +23,14 @@ export const teamsApi = {
   removeMember: (id: string, userId: string) =>
     apiFetch<void>(`/teams/${id}/members/${userId}`, { method: "DELETE" }),
   prompts: (id: string) => apiFetch<PromptSummary[]>(`/teams/${id}/prompts`),
+
+  // --- Invitations ---
+  invite: (id: string, email: string) =>
+    apiFetch<InviteCreated>(`/teams/${id}/invites`, { method: "POST", body: { email } }),
+  listInvites: (id: string) => apiFetch<TeamInvite[]>(`/teams/${id}/invites`),
+  revokeInvite: (id: string, inviteId: string) =>
+    apiFetch<void>(`/teams/${id}/invites/${inviteId}`, { method: "DELETE" }),
+  getInvite: (token: string) => apiFetch<InviteInfo>(`/invites/${token}`, { auth: false }),
+  acceptInvite: (token: string) =>
+    apiFetch<TeamDetail>(`/invites/${token}/accept`, { method: "POST" }),
 };

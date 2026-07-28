@@ -53,3 +53,27 @@ export function useRemoveMember(id: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["teams", id] }),
   });
 }
+
+export function useTeamInvites(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["teams", id, "invites"],
+    queryFn: () => teamsApi.listInvites(id),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+export function useInviteMember(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) => teamsApi.invite(id, email),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["teams", id, "invites"] }),
+  });
+}
+
+export function useRevokeInvite(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: string) => teamsApi.revokeInvite(id, inviteId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["teams", id, "invites"] }),
+  });
+}

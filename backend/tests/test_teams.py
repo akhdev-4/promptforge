@@ -109,3 +109,71 @@ async def test_cannot_assign_prompt_to_foreign_team(client: AsyncClient) -> None
         headers=stranger,
     )
     assert resp.status_code == 403
+
+
+INVITES = "/api/v1/invites"
+
+
+@pytest.mark.asyncio
+async def test_invite_by_email_accept_flow(client: AsyncClient) -> None:
+    _, owner = await make_user(client)
+    invitee_me, invitee = await make_user(client)
+    team = await _team(client, owner, "Squad")
+    tid = team["id"]
+
+    resp = await client.post(
+        f"{TEAMS}/{tid}/invites", json={"email": invitee_me["email"]}, headers=owner
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["email_sent"] is False  # no SMTP configured in tests
+    token = body["link"].rsplit("/", 1)[-1]
+
+    listed = (await client.get(f"{TEAMS}/{tid}/invites", headers=owner)).json()
+    assert any(i["email"] == invitee_me["email"] for i in listed)
+
+    info = (await client.get(f"{INVITES}/{token}")).json()
+    assert info["team_name"] == "Squad"
+    assert info["expired"] is False
+
+    # The wrong user (owner) can't accept an invite addressed to someone else.
+    wrong = await client.post(f"{INVITES}/{token}/accept", headers=owner)
+    assert wrong.status_code == 403
+
+    accepted = await client.post(f"{INVITES}/{token}/accept", headers=invitee)
+    assert accepted.status_code == 200, accepted.text
+    members = [m["username"] for m in accepted.json()["members"]]
+    assert invitee_me["username"] in members
+
+    # Re-inviting an existing member conflicts.
+    dup = await client.post(
+        f"{TEAMS}/{tid}/invites", json={"email": invitee_me["email"]}, headers=owner
+    )
+    assert dup.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_only_owner_can_invite(client: AsyncClient) -> None:
+    _, owner = await make_user(client)
+    _, other = await make_user(client)
+    team = await _team(client, owner)
+    resp = await client.post(
+        f"{TEAMS}/{team['id']}/invites", json={"email": "x@example.com"}, headers=other
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_revoke_invite(client: AsyncClient) -> None:
+    _, owner = await make_user(client)
+    team = await _team(client, owner)
+    tid = team["id"]
+    invite = (
+        await client.post(
+            f"{TEAMS}/{tid}/invites", json={"email": "pending@example.com"}, headers=owner
+        )
+    ).json()
+    assert len((await client.get(f"{TEAMS}/{tid}/invites", headers=owner)).json()) == 1
+    deleted = await client.delete(f"{TEAMS}/{tid}/invites/{invite['id']}", headers=owner)
+    assert deleted.status_code == 204
+    assert (await client.get(f"{TEAMS}/{tid}/invites", headers=owner)).json() == []

@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     collections,
     community,
     health,
+    invites,
     projects,
     prompts,
     public,
@@ -37,6 +38,7 @@ api_router.include_router(collections.router, prefix="/collections", tags=["coll
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(community.router, tags=["community"])
 api_router.include_router(teams.router, prefix="/teams", tags=["teams"])
+api_router.include_router(invites.router, prefix="/invites", tags=["invites"])
 api_router.include_router(api_keys.router, prefix="/keys", tags=["api-keys"])
 api_router.include_router(
     public.router,

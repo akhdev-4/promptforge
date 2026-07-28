@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class TeamCreate(BaseModel):
@@ -15,6 +15,38 @@ class TeamCreate(BaseModel):
 
 class AddMember(BaseModel):
     username: str = Field(min_length=1, max_length=50)
+
+
+# --- Invitations ------------------------------------------------------------
+class InviteCreate(BaseModel):
+    email: EmailStr
+
+
+class InviteRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    email: str
+    role: str
+    status: str
+    created_at: datetime
+    expires_at: datetime
+
+
+class InviteCreated(InviteRead):
+    """Returned on creation — carries the shareable link + delivery status."""
+
+    link: str
+    email_sent: bool
+
+
+class InviteInfo(BaseModel):
+    """Public preview shown on the accept page."""
+
+    team_name: str
+    email: str
+    status: str
+    expired: bool
 
 
 class TeamMemberRead(BaseModel):

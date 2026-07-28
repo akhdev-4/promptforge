@@ -49,6 +49,20 @@ class Settings(BaseSettings):
     # --- Cache / Queue --------------------------------------------------------
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # --- Email (SMTP) ---------------------------------------------------------
+    # Best-effort transactional email (team invites, etc.). If unset, sending is
+    # skipped and the app still works via copyable links. For Gmail use an
+    # App Password (not your account password) as SMTP_PASSWORD.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    # Public URL of the frontend — used to build invite/accept links in emails.
+    FRONTEND_URL: str = "http://localhost:3000"
+    # How long a team invite stays valid.
+    TEAM_INVITE_EXPIRE_HOURS: int = 168  # 7 days
+
     # --- CORS -----------------------------------------------------------------
     # NoDecode: skip pydantic-settings' JSON decoding of this list field so the
     # validator below can accept a plain comma-separated env value.

@@ -259,6 +259,27 @@ export interface TeamDetail extends Omit<TeamSummary, "member_count"> {
   members: TeamMember[];
 }
 
+export interface TeamInvite {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface InviteCreated extends TeamInvite {
+  link: string;
+  email_sent: boolean;
+}
+
+export interface InviteInfo {
+  team_name: string;
+  email: string;
+  status: string;
+  expired: boolean;
+}
+
 export type KitCategory =
   | "ecommerce"
   | "dashboard"

@@ -8,9 +8,10 @@ altering the prompts table.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
@@ -42,6 +43,30 @@ class TeamMember(UUIDMixin, TimestampMixin, Base):
     role: Mapped[str] = mapped_column(String(20), default="member", nullable=False)
 
     user: Mapped[User] = relationship(lazy="joined")
+
+
+class TeamInvite(UUIDMixin, TimestampMixin, Base):
+    """A pending email invitation to join a team.
+
+    Own table (auto-creates, no ALTER). The accept link carries ``token``; the
+    invite is claimed by a signed-in user whose email matches ``email``.
+    """
+
+    __tablename__ = "team_invites"
+
+    team_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(20), default="member", nullable=False)
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    invited_by: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    # pending | accepted | revoked
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class PromptTeam(UUIDMixin, TimestampMixin, Base):
