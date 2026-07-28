@@ -16,6 +16,39 @@ function initials(name: string | null, email: string): string {
   return email.slice(0, 2).toUpperCase();
 }
 
+/** Profile picture when set, else a colored initials circle. */
+function Avatar({
+  url,
+  fallback,
+  className,
+}: {
+  url: string | null;
+  fallback: string;
+  className: string;
+}) {
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={url}
+        alt="Profile"
+        className={cn("rounded-full object-cover", className)}
+        draggable={false}
+      />
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "flex items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary",
+        className,
+      )}
+    >
+      {fallback}
+    </span>
+  );
+}
+
 export function UserMenu() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
@@ -43,21 +76,30 @@ export function UserMenu() {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
-          {initials(user.full_name, user.email)}
-        </span>
+        <Avatar
+          url={user.avatar_url}
+          fallback={initials(user.full_name, user.email)}
+          className="h-9 w-9"
+        />
       </button>
 
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
-          <div className="border-b border-border px-4 py-3">
-            <p className="truncate text-sm font-medium">
-              {user.full_name ?? user.username ?? "User"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            <span className="mt-1 inline-block rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary">
-              {user.role}
-            </span>
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <Avatar
+              url={user.avatar_url}
+              fallback={initials(user.full_name, user.email)}
+              className="h-10 w-10 shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">
+                {user.full_name ?? user.username ?? "User"}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+              <span className="mt-1 inline-block rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary">
+                {user.role}
+              </span>
+            </div>
           </div>
           <div className="p-1">
             <Link
