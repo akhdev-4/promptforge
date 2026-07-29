@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.email import send_email
+from app.core.email_templates import team_invite_email
 from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError
 from app.core.slug import slug_with_suffix
 from app.models.prompt import Prompt
@@ -208,23 +209,13 @@ class TeamService:
 
         link = self._invite_link(invite.token)
         inviter = owner.full_name or (f"@{owner.username}" if owner.username else "Someone")
-        sent = await send_email(
-            email,
-            f"You're invited to join {team.name} on PromptForge",
-            text=(
-                f"{inviter} invited you to join the team “{team.name}” on PromptForge.\n\n"
-                f"Accept the invitation: {link}\n\n"
-                "If you don't have an account yet, you can create one with this email "
-                "and you'll join automatically."
-            ),
-            html=(
-                f"<p>{inviter} invited you to join the team "
-                f"<strong>{team.name}</strong> on PromptForge.</p>"
-                f'<p><a href="{link}">Accept the invitation</a></p>'
-                "<p>If you don't have an account yet, sign up with this email and "
-                "you'll join automatically.</p>"
-            ),
+        subject, text, html = team_invite_email(
+            team_name=team.name,
+            inviter=inviter,
+            link=link,
+            expires_days=max(1, settings.TEAM_INVITE_EXPIRE_HOURS // 24),
         )
+        sent = await send_email(email, subject, text=text, html=html)
         return invite, link, sent
 
     async def list_invites(self, team_id: uuid.UUID, user: User) -> list[TeamInvite]:
