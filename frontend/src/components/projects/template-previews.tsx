@@ -16,7 +16,10 @@ function previewsKey(id: string) {
   return ["template-previews", id] as const;
 }
 
-/** Grid thumbnail — images render directly, video/embeds get a play badge. */
+/**
+ * Grid thumbnail. Video previews play inline — muted and looping, which is what
+ * browsers require to allow autoplay — so the tile behaves like a live preview.
+ */
 function Thumb({ url, alt }: { url: string; alt: string }) {
   const media = detectMedia(url);
   const frame = "aspect-video w-full object-cover transition group-hover:opacity-90";
@@ -28,16 +31,30 @@ function Thumb({ url, alt }: { url: string; alt: string }) {
 
   return (
     <span className="relative block">
-      {media.poster ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={media.poster} alt={alt} className={frame} />
-      ) : media.kind === "video" ? (
-        // First frame acts as the poster; never downloads the whole file.
-        <video src={url} preload="metadata" muted playsInline className={frame} />
+      {media.kind === "video" ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video
+          src={url}
+          className={frame}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster={media.poster}
+        />
       ) : (
-        <span className={`${frame} flex items-center justify-center bg-muted`} />
+        <iframe
+          src={media.autoplaySrc ?? media.src}
+          title={alt}
+          loading="lazy"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          // Clicks fall through to the button underneath, which opens the lightbox.
+          className={`${frame} pointer-events-none border-0`}
+        />
       )}
-      <span className="absolute inset-0 flex items-center justify-center">
+      {/* Hover affordance: the tile is silent, the lightbox has sound + controls. */}
+      <span className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur">
           <Play className="h-4 w-4 fill-current" />
         </span>
