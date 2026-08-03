@@ -70,7 +70,8 @@ async def download_kit(
     db: DbSession,
     ref: str = Query("main", description="Branch, tag, or commit — defaults to latest"),
 ) -> StreamingResponse:
-    info = await TemplateService(db).download_info(project_id)
+    service = TemplateService(db)
+    info = await service.download_info(project_id)
     if info is None:
         raise NotFoundError("This project is not a template")
     repo_url, slug = info
@@ -82,6 +83,7 @@ async def download_kit(
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, detail=f"Couldn't fetch the codebase: {exc}"
         ) from exc
+    await service.count_download(project_id)
     return StreamingResponse(
         body,
         media_type="application/zip",

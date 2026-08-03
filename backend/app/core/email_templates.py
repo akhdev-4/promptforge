@@ -141,6 +141,73 @@ def render_email(
 </html>"""
 
 
+def verify_email(*, name: str, link: str, expires_hours: int) -> tuple[str, str, str]:
+    """Build the address-confirmation email. Returns ``(subject, text, html)``."""
+    subject = "Confirm your email for PromptForge"
+    text = (
+        f"Hi {name},\n\n"
+        "Confirm your email address to finish setting up your PromptForge account:\n"
+        f"{link}\n\n"
+        f"This link expires in {expires_hours} hours. "
+        "If you didn't create an account, you can safely ignore this email."
+    )
+    body_html = f"""
+                <p style="margin:0 0 14px;font-size:15px;line-height:23px;">
+                  Hi {escape(name)}, thanks for joining PromptForge.
+                </p>
+                <p style="margin:0;font-size:15px;line-height:23px;color:{_MUTED};">
+                  Confirm your email address to finish setting up your account.
+                </p>"""
+    html = render_email(
+        heading="Confirm your email",
+        preheader="Confirm your email address to finish setting up PromptForge.",
+        body_html=body_html,
+        cta_label="Confirm email",
+        cta_url=link,
+        footer_note=(
+            f"This link expires in {expires_hours} hours. "
+            "If you didn't create an account, you can safely ignore this email."
+        ),
+    )
+    return subject, text, html
+
+
+def password_reset_email(
+    *, name: str, link: str, expires_minutes: int
+) -> tuple[str, str, str]:
+    """Build the password-reset email. Returns ``(subject, text, html)``."""
+    subject = "Reset your PromptForge password"
+    text = (
+        f"Hi {name},\n\n"
+        "We received a request to reset your PromptForge password. "
+        "Choose a new one here:\n"
+        f"{link}\n\n"
+        f"This link expires in {expires_minutes} minutes and can only be used once.\n"
+        "If you didn't request this, you can safely ignore this email — "
+        "your password won't change."
+    )
+    body_html = f"""
+                <p style="margin:0 0 14px;font-size:15px;line-height:23px;">
+                  Hi {escape(name)}, we received a request to reset your password.
+                </p>
+                <p style="margin:0;font-size:15px;line-height:23px;color:{_MUTED};">
+                  Choose a new password using the button below. The link can only be
+                  used once.
+                </p>"""
+    html = render_email(
+        heading="Reset your password",
+        preheader="Choose a new password for your PromptForge account.",
+        body_html=body_html,
+        cta_label="Choose a new password",
+        cta_url=link,
+        footer_note=(
+            f"This link expires in {expires_minutes} minutes. If you didn't request "
+            "it, you can safely ignore this email — your password won't change."
+        ),
+    )
+    return subject, text, html
+
+
 def team_invite_email(
     *, team_name: str, inviter: str, link: str, expires_days: int
 ) -> tuple[str, str, str]:

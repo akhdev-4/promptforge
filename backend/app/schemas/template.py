@@ -44,6 +44,7 @@ class TemplateRead(BaseModel):
     stack: str | None
     setup_command: str | None
     notes: str | None
+    downloads_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -61,6 +62,7 @@ class PublicTemplateSummary(BaseModel):
     stack: str | None
     repo_url: str
     prompt_count: int
+    downloads_count: int = 0
     author: ProjectAuthor
 
 

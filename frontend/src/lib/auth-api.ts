@@ -28,6 +28,32 @@ export const authApi = {
 
   me: () => apiFetch<User>("/users/me"),
 
+  // --- Email verification / password reset ---
+  verifyEmail: (token: string) =>
+    apiFetch<User>(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
+      method: "POST",
+      auth: false,
+    }),
+
+  resendVerification: () =>
+    apiFetch<{ detail: string; email_sent: boolean }>("/auth/verify-email/resend", {
+      method: "POST",
+    }),
+
+  forgotPassword: (email: string) =>
+    apiFetch<{ detail: string; email_sent: boolean }>("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+      auth: false,
+    }),
+
+  resetPassword: (token: string, password: string) =>
+    apiFetch<TokenPair>("/auth/reset-password", {
+      method: "POST",
+      body: { token, password },
+      auth: false,
+    }),
+
   updateMe: (data: ProfileUpdateInput) =>
     apiFetch<User>("/users/me", { method: "PATCH", body: data }),
 

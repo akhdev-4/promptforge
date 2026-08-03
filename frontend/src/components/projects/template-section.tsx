@@ -114,11 +114,19 @@ export function TemplateSection({
             {template.notes && (
               <p className="whitespace-pre-wrap text-muted-foreground">{template.notes}</p>
             )}
-            <Button size="sm" asChild>
-              <a href={projectsApi.templateDownloadUrl(projectId)}>
-                <Download className="h-4 w-4" /> Download codebase
-              </a>
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button size="sm" asChild>
+                <a href={projectsApi.templateDownloadUrl(projectId)}>
+                  <Download className="h-4 w-4" /> Download codebase
+                </a>
+              </Button>
+              {template.downloads_count > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {template.downloads_count} download
+                  {template.downloads_count === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
           </div>
         ) : null}
 

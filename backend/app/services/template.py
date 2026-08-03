@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
@@ -53,15 +53,27 @@ class TemplateService:
     async def get_for_project(self, project_id: uuid.UUID) -> ProjectTemplate | None:
         return await self.templates.get_by(project_id=project_id)
 
-    async def download_info(
-        self, project_id: uuid.UUID
-    ) -> tuple[str, str] | None:
+    async def download_info(self, project_id: uuid.UUID) -> tuple[str, str] | None:
         """Return ``(repo_url, project_slug)`` for a template, or ``None``."""
         tpl = await self.templates.get_by(project_id=project_id)
         if tpl is None:
             return None
         project = await self.projects._project_or_404(project_id)
         return tpl.repo_url, project.slug
+
+    async def count_download(self, project_id: uuid.UUID) -> None:
+        """Record a successful pull.
+
+        Called only once the archive actually opens, so unreachable repos and
+        bad refs don't inflate the number. The atomic UPDATE keeps concurrent
+        downloads from clobbering each other's increment.
+        """
+        await self.session.execute(
+            update(ProjectTemplate)
+            .where(ProjectTemplate.project_id == project_id)
+            .values(downloads_count=ProjectTemplate.downloads_count + 1)
+        )
+        await self.session.flush()
 
     async def remove(self, project_id: uuid.UUID, user: User) -> None:
         await self.projects._owned_project(project_id, user)
@@ -145,6 +157,7 @@ class TemplateService:
                 stack=tpl.stack,
                 repo_url=tpl.repo_url,
                 prompt_count=counts.get(proj.id, 0),
+                downloads_count=tpl.downloads_count,
                 author=ProjectAuthor.model_validate(proj.author),
             )
             for tpl, proj in rows
@@ -229,6 +242,7 @@ class TemplateService:
             setup_command=tpl.setup_command,
             notes=tpl.notes,
             prompt_count=len(prompts),
+            downloads_count=tpl.downloads_count,
             author=ProjectAuthor.model_validate(project.author),
             modules=[
                 ManifestModule(

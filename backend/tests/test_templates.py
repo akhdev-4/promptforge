@@ -309,3 +309,20 @@ async def test_delete_template(client: AsyncClient) -> None:
     resp = await client.delete(f"{PROJECTS}/{pid}/template", headers=headers)
     assert resp.status_code == 204
     assert (await client.get(f"{PROJECTS}/{pid}/template")).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_failed_download_does_not_count(client: AsyncClient) -> None:
+    _, headers = await make_user(client)
+    s = await _scaffold(client, headers)
+    pid = s["project"]["id"]
+    # A non-GitHub repo can't be archived, so the pull fails before counting.
+    await client.put(
+        f"{PROJECTS}/{pid}/template",
+        json={"repo_url": "https://gitlab.com/acme/store"},
+        headers=headers,
+    )
+    assert (await client.get(f"{PROJECTS}/{pid}/template/download")).status_code == 400
+
+    tpl = (await client.get(f"{PROJECTS}/{pid}/template")).json()
+    assert tpl["downloads_count"] == 0

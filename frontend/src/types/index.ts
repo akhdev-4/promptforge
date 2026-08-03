@@ -306,6 +306,7 @@ export interface ProjectTemplate {
   stack: string | null;
   setup_command: string | null;
   notes: string | null;
+  downloads_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -336,6 +337,7 @@ export interface KitTemplate {
   stack: string | null;
   repo_url: string;
   prompt_count: number;
+  downloads_count: number;
   author: { id: string; username: string | null; full_name: string | null };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, LogOut, Monitor, Moon, Sun, UserCog } from "lucide-react";
+import { Compass, Loader2, LogOut, MailCheck, Monitor, Moon, Sun, UserCog } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ApiError } from "@/lib/api";
+import { authApi } from "@/lib/auth-api";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
@@ -25,6 +27,54 @@ const THEMES = [
   { value: "dark", label: "Dark", icon: Moon },
   { value: "system", label: "System", icon: Monitor },
 ] as const;
+
+/** Inline "not verified yet" state with a one-click resend. */
+function ResendVerification() {
+  const [state, setState] = React.useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [note, setNote] = React.useState<string | null>(null);
+
+  const send = async () => {
+    setState("sending");
+    try {
+      const res = await authApi.resendVerification();
+      setNote(
+        res.email_sent
+          ? "Confirmation link sent — check your inbox."
+          : "Email isn't configured on this server, so nothing was sent.",
+      );
+      setState("sent");
+    } catch (e) {
+      setNote(e instanceof ApiError ? e.message : "Couldn't send the link.");
+      setState("error");
+    }
+  };
+
+  return (
+    <span className="flex flex-col items-end gap-1">
+      <span className="flex items-center gap-2">
+        <span className="text-muted-foreground">No</span>
+        <Button size="sm" variant="outline" onClick={send} disabled={state === "sending"}>
+          {state === "sending" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <MailCheck className="h-3.5 w-3.5" />
+          )}
+          Resend link
+        </Button>
+      </span>
+      {note && (
+        <span
+          className={cn(
+            "text-xs font-normal",
+            state === "error" ? "text-destructive" : "text-muted-foreground",
+          )}
+        >
+          {note}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function AccountRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -112,7 +162,7 @@ export default function SettingsPage() {
           />
           <AccountRow
             label="Verified"
-            value={user.is_verified ? "Yes" : "No"}
+            value={user.is_verified ? "Yes" : <ResendVerification />}
           />
           <AccountRow label="Member since" value={formatDate(user.created_at)} />
         </CardContent>

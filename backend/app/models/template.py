@@ -36,6 +36,8 @@ class ProjectTemplate(UUIDMixin, TimestampMixin, Base):
     setup_command: Mapped[str | None] = mapped_column(String(300))
     # Free-form extra instructions (Markdown allowed).
     notes: Mapped[str | None] = mapped_column(Text)
+    # How many times the codebase has been pulled (web button, CLI, extension).
+    downloads_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class TemplatePreview(UUIDMixin, TimestampMixin, Base):

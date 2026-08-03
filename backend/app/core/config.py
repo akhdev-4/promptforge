@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     # How long a team invite stays valid.
     TEAM_INVITE_EXPIRE_HOURS: int = 168  # 7 days
+    # Email-verification links are long-lived; reset links are deliberately short.
+    EMAIL_VERIFY_EXPIRE_HOURS: int = 48
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60
 
     # --- CORS -----------------------------------------------------------------
     # NoDecode: skip pydantic-settings' JSON decoding of this list field so the
@@ -82,6 +85,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_PUBLIC_PER_MIN: int = 120
     # Codebase downloads (heavier — they proxy an archive), per caller per minute.
     RATE_LIMIT_DOWNLOAD_PER_MIN: int = 20
+    # Endpoints that send mail to a real inbox, per IP per minute.
+    RATE_LIMIT_AUTH_EMAIL_PER_MIN: int = 5
 
     # --- Playground (prompt runner) -------------------------------------------
     # "mock" = zero-key demo output. "gemini" = real output via Google's free

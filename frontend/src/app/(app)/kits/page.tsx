@@ -39,6 +39,11 @@ function KitCard({ kit }: { kit: KitTemplate }) {
             <Boxes className="h-3 w-3" /> {kit.prompt_count} prompt
             {kit.prompt_count === 1 ? "" : "s"}
           </Badge>
+          {kit.downloads_count > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              <Download className="h-3 w-3" /> {kit.downloads_count}
+            </Badge>
+          )}
           <div className="ml-auto flex gap-1.5">
             <Button size="sm" variant="ghost" asChild>
               <Link href={`/projects/${kit.project_id}`}>
