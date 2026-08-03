@@ -153,6 +153,7 @@ const PROMPT_TYPES = [
   "ui",
   "frontend",
   "backend",
+  "full_stack",
   "api",
   "database",
   "testing",

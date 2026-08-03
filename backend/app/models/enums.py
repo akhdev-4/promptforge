@@ -9,6 +9,8 @@ class PromptType(str, enum.Enum):
     UI = "ui"
     FRONTEND = "frontend"
     BACKEND = "backend"
+    # One prompt that produces an entire application, end to end.
+    FULL_STACK = "full_stack"
     DATABASE = "database"
     API = "api"
     ARCHITECTURE = "architecture"

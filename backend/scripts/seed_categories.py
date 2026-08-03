@@ -20,6 +20,8 @@ AUTHOR = {"email": "demo@promptforge.io", "password": "password123"}
 
 # (parent, [children]) — parents created first, children nested under them.
 TREE: list[tuple[str, list[str]]] = [
+    # One prompt that builds a whole application, end to end.
+    ("Full Stack", ["Complete Applications", "Starter Kits", "Boilerplates"]),
     ("Frontend", ["Authentication UI", "Dashboards", "Landing Pages", "Design Systems"]),
     ("Backend", ["APIs", "Authentication & Security", "Async & Background Jobs"]),
     ("Database", ["Schema Design", "Query Performance", "Migrations"]),

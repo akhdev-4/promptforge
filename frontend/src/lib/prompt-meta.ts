@@ -6,6 +6,7 @@ export const promptTypeLabels: Record<PromptType, string> = {
   ui: "UI / Design",
   frontend: "Frontend",
   backend: "Backend",
+  full_stack: "Full Stack",
   database: "Database",
   api: "API",
   architecture: "Architecture",

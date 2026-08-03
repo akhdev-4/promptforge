@@ -44,6 +44,7 @@ export type PromptType =
   | "ui"
   | "frontend"
   | "backend"
+  | "full_stack"
   | "database"
   | "api"
   | "architecture"
