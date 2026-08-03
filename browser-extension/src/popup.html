@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body { width: 340px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="../icons/icon32.png" alt="" />
+      <h1>PromptForge</h1>
+      <a id="open-options" href="#">Options</a>
+    </header>
+
+    <!-- Shown until a key is configured. -->
+    <div id="setup" class="panel active">
+      <p class="hint">
+        Add your PromptForge API key to start saving prompts from this page.
+      </p>
+      <button id="go-options" class="primary">Open options</button>
+    </div>
+
+    <div id="main" hidden>
+      <div class="tabs" role="tablist">
+        <button id="tab-save" role="tab" aria-selected="true">Save prompt</button>
+        <button id="tab-find" role="tab" aria-selected="false">Find</button>
+      </div>
+
+      <section id="panel-save" class="panel active">
+        <label for="content">Prompt</label>
+        <textarea id="content" placeholder="Select text on the page, or paste it here…"></textarea>
+
+        <label for="title">Title</label>
+        <input id="title" maxlength="200" placeholder="e.g. Ghibli portrait restyle" />
+
+        <label for="type">Type</label>
+        <select id="type">
+          <option value="other">Other</option>
+          <option value="ui">UI / Design</option>
+          <option value="frontend">Frontend</option>
+          <option value="backend">Backend</option>
+          <option value="api">API</option>
+          <option value="database">Database</option>
+          <option value="testing">Testing</option>
+          <option value="documentation">Documentation</option>
+        </select>
+
+        <button id="save" class="primary">Save to PromptForge</button>
+        <p id="save-status" class="status"></p>
+      </section>
+
+      <section id="panel-find" class="panel">
+        <label for="query">Search your library</label>
+        <input id="query" placeholder="e.g. stripe checkout" />
+        <p class="hint">Pick a result to copy its full text to the clipboard.</p>
+        <div id="results" class="results"></div>
+        <p id="find-status" class="status"></p>
+      </section>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

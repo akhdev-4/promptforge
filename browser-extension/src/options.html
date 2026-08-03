@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PromptForge — Options</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body { max-width: 520px; margin: 0 auto; padding-bottom: 32px; }
+      .panel { display: block; }
+      ol { padding-left: 18px; margin: 6px 0 14px; }
+      li { margin-bottom: 4px; color: var(--muted); }
+      code { background: var(--canvas); padding: 1px 5px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="../icons/icon32.png" alt="" />
+      <h1>PromptForge</h1>
+    </header>
+
+    <section class="panel">
+      <p class="hint">Connect this extension to your PromptForge account.</p>
+      <ol>
+        <li>Open PromptForge → <strong>Settings → API keys</strong>.</li>
+        <li>
+          Tick <strong>“Allow publishing (write access)”</strong> — required to save
+          prompts. A read-only key can only search.
+        </li>
+        <li>Create the key and paste the secret below.</li>
+      </ol>
+
+      <label for="apiUrl">PromptForge URL</label>
+      <input id="apiUrl" placeholder="https://promptforge.fastapicloud.dev" />
+
+      <label for="apiKey">API key</label>
+      <input id="apiKey" type="password" placeholder="pf_…" autocomplete="off" />
+
+      <button id="save" class="primary">Verify &amp; save</button>
+      <p id="status" class="status"></p>
+
+      <p class="hint" style="margin-top: 18px">
+        The key is stored with <code>chrome.storage.local</code> on this device and is
+        only ever sent to the URL above.
+      </p>
+    </section>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
