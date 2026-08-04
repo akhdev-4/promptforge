@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.diffing import line_diff
@@ -14,6 +15,7 @@ from app.models.enums import PromptStatus
 from app.models.project import Component
 from app.models.prompt import Prompt, PromptVersion
 from app.models.tag import Tag
+from app.models.team import PromptTeam, TeamMember
 from app.models.user import User, UserRole
 from app.repositories.base import BaseRepository
 from app.repositories.category import CategoryRepository
@@ -66,6 +68,31 @@ class PromptService:
     @staticmethod
     def _can_delete(prompt: Prompt, user: User) -> bool:
         return prompt.author_id == user.id or user.role.satisfies(UserRole.ADMINISTRATOR)
+
+    async def _can_contribute(self, prompt: Prompt, user: User) -> bool:
+        """Who may add a *version* to an existing prompt.
+
+        Wider than :meth:`_can_edit`: teammates can co-author a prompt that's
+        private to their team, so its history carries several names instead of
+        forcing a fork. Deleting and metadata edits stay with the owner.
+        """
+        if self._can_edit(prompt, user):
+            return True
+        team_id = (
+            await self.session.execute(
+                select(PromptTeam.team_id).where(PromptTeam.prompt_id == prompt.id)
+            )
+        ).scalar_one_or_none()
+        if team_id is None:
+            return False
+        membership = (
+            await self.session.execute(
+                select(TeamMember.id).where(
+                    TeamMember.team_id == team_id, TeamMember.user_id == user.id
+                )
+            )
+        ).scalar_one_or_none()
+        return membership is not None
 
     async def _get_or_404(self, prompt_id: uuid.UUID) -> Prompt:
         prompt = await self.prompts.get(prompt_id)
@@ -136,7 +163,7 @@ class PromptService:
         self, prompt_id: uuid.UUID, data: VersionCreate, user: User
     ) -> tuple[Prompt, PromptVersion]:
         prompt = await self._get_or_404(prompt_id)
-        if not self._can_edit(prompt, user):
+        if not await self._can_contribute(prompt, user):
             raise PermissionDeniedError("You cannot add versions to this prompt")
 
         next_number = prompt.current_version + 1

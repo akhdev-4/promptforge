@@ -177,3 +177,63 @@ async def test_revoke_invite(client: AsyncClient) -> None:
     deleted = await client.delete(f"{TEAMS}/{tid}/invites/{invite['id']}", headers=owner)
     assert deleted.status_code == 204
     assert (await client.get(f"{TEAMS}/{tid}/invites", headers=owner)).json() == []
+
+
+@pytest.mark.asyncio
+async def test_teammates_co_author_versions_of_one_prompt(client: AsyncClient) -> None:
+    owner_me, owner = await make_user(client)
+    mate_me, mate = await make_user(client)
+    team = await _team(client, owner, "Co-authors")
+
+    # Bring the teammate in, then make a prompt private to the team.
+    await client.post(
+        f"{TEAMS}/{team['id']}/members",
+        json={"username": mate_me["username"]},
+        headers=owner,
+    )
+    prompt = (
+        await client.post(
+            PROMPTS,
+            json={
+                "title": "Shared prompt",
+                "content": "v1 body",
+                "status": "published",
+                "team_id": team["id"],
+            },
+            headers=owner,
+        )
+    ).json()
+
+    # The teammate contributes a version to the SAME prompt (no fork).
+    resp = await client.post(
+        f"{PROMPTS}/{prompt['id']}/versions",
+        json={"content": "v2 body", "change_summary": "Tightened the wording"},
+        headers=mate,
+    )
+    assert resp.status_code == 201, resp.text
+
+    versions = (await client.get(f"{PROMPTS}/{prompt['id']}/versions")).json()
+    assert [v["version_number"] for v in versions] == [2, 1]
+    # History now carries two different names on one prompt.
+    assert versions[0]["author"]["username"] == mate_me["username"]
+    assert versions[1]["author"]["username"] == owner_me["username"]
+
+
+@pytest.mark.asyncio
+async def test_outsiders_still_cannot_add_versions(client: AsyncClient) -> None:
+    _, owner = await make_user(client)
+    _, stranger = await make_user(client)
+    prompt = (
+        await client.post(
+            PROMPTS,
+            json={"title": "Mine", "content": "body", "status": "published"},
+            headers=owner,
+        )
+    ).json()
+
+    resp = await client.post(
+        f"{PROMPTS}/{prompt['id']}/versions",
+        json={"content": "sneaky edit"},
+        headers=stranger,
+    )
+    assert resp.status_code == 403

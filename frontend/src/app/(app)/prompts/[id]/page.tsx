@@ -583,8 +583,8 @@ export default function PromptDetailPage() {
                             {formatDate(v.created_at)}
                           </span>
                         </div>
-                        {/* Who wrote this version — differs from the prompt's
-                            author on a fork, or with multiple contributors. */}
+                        {/* v1 is the original; later versions are edits, which
+                            may well be by someone other than the owner. */}
                         {v.author && (
                           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-[8px] font-semibold text-primary">
@@ -602,10 +602,17 @@ export default function PromptDetailPage() {
                               )}
                             </span>
                             <span className="truncate">
-                              by{" "}
-                              {v.author.full_name ??
-                                (v.author.username ? `@${v.author.username}` : "unknown")}
+                              {v.version_number === 1 ? "created by" : "edited by"}{" "}
+                              <span className="font-medium text-foreground">
+                                {v.author.full_name ??
+                                  (v.author.username ? `@${v.author.username}` : "unknown")}
+                              </span>
                             </span>
+                            {v.author.id !== prompt.author.id && (
+                              <Badge variant="outline" className="shrink-0 text-[9px]">
+                                contributor
+                              </Badge>
+                            )}
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
