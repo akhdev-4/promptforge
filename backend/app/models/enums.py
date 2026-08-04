@@ -22,6 +22,11 @@ class PromptType(str, enum.Enum):
     DOCUMENTATION = "documentation"
     CODE_REVIEW = "code_review"
     REFACTORING = "refactoring"
+    # --- Creative / non-developer work ---
+    IMAGE_GENERATION = "image_generation"
+    PHOTO_EDITING = "photo_editing"
+    VIDEO = "video"
+    WRITING = "writing"
     OTHER = "other"
 
 

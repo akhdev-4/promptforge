@@ -56,6 +56,10 @@ export type PromptType =
   | "documentation"
   | "code_review"
   | "refactoring"
+  | "image_generation"
+  | "photo_editing"
+  | "video"
+  | "writing"
   | "other";
 
 export type Complexity = "beginner" | "intermediate" | "advanced" | "expert";

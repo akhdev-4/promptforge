@@ -18,8 +18,46 @@ export const promptTypeLabels: Record<PromptType, string> = {
   documentation: "Documentation",
   code_review: "Code Review",
   refactoring: "Refactoring",
+  image_generation: "Image Generation",
+  photo_editing: "Photo Editing",
+  video: "Video",
+  writing: "Writing & Copy",
   other: "Other",
 };
+
+/**
+ * Which types each library lane offers.
+ *
+ * The lanes serve different audiences, so showing a photo-editing user
+ * "Code Review" (or a developer "Image Generation") is just noise. "Other" is
+ * in both lists because plenty of existing prompts still use it.
+ */
+export const DEV_PROMPT_TYPES: PromptType[] = [
+  "ui",
+  "frontend",
+  "backend",
+  "full_stack",
+  "database",
+  "api",
+  "architecture",
+  "security",
+  "optimization",
+  "testing",
+  "bug_fix",
+  "deployment",
+  "documentation",
+  "code_review",
+  "refactoring",
+  "other",
+];
+
+export const CREATIVE_PROMPT_TYPES: PromptType[] = [
+  "image_generation",
+  "photo_editing",
+  "video",
+  "writing",
+  "other",
+];
 
 export const complexityLabels: Record<Complexity, string> = {
   beginner: "Beginner",

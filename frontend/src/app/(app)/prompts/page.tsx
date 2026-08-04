@@ -12,7 +12,13 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrompts } from "@/hooks/use-prompts";
 import { useCategoryTree, usePopularTags } from "@/hooks/use-taxonomy";
-import { promptTypeOptions, sortOptions } from "@/lib/prompt-meta";
+import {
+  CREATIVE_PROMPT_TYPES,
+  DEV_PROMPT_TYPES,
+  promptTypeLabels,
+  promptTypeOptions,
+  sortOptions,
+} from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
 import type { CategoryNode, PromptSort, PromptType } from "@/types";
 
@@ -169,9 +175,22 @@ function PromptsLibrary() {
   const categoryOptions =
     lane === "creative" ? creativeOptions : lane === "dev" ? devOptions : allOptions;
 
+  // Each lane offers only the types its audience cares about.
+  const typeOptions = React.useMemo<[PromptType, string][]>(() => {
+    if (lane === "all") return promptTypeOptions;
+    const types = lane === "creative" ? CREATIVE_PROMPT_TYPES : DEV_PROMPT_TYPES;
+    return types.map((t) => [t, promptTypeLabels[t]]);
+  }, [lane]);
+
   const changeLane = (next: Lane) => {
     setLane(next);
     setCategoryId(""); // clear any drill-down that belonged to the old lane
+    // ...and any type filter the new lane doesn't offer, which would otherwise
+    // silently return nothing (e.g. "Backend" carried into AI & Creative).
+    if (next !== "all" && type) {
+      const allowed = next === "creative" ? CREATIVE_PROMPT_TYPES : DEV_PROMPT_TYPES;
+      if (!allowed.includes(type)) setType("");
+    }
     setPage(1);
   };
 
@@ -285,7 +304,7 @@ function PromptsLibrary() {
             }}
           >
             <option value="">All types</option>
-            {promptTypeOptions.map(([v, l]) => (
+            {typeOptions.map(([v, l]) => (
               <option key={v} value={v}>
                 {l}
               </option>
