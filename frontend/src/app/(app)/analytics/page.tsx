@@ -17,12 +17,12 @@ export default function AnalyticsPage() {
 
   const tiles = overview
     ? [
-        ["Prompts", overview.total_prompts],
+        ["My prompts", overview.total_prompts],
         ["Views", overview.total_views],
         ["Copies", overview.total_copies],
         ["Likes", overview.total_likes],
-        ["Categories", overview.total_categories],
-        ["Tags", overview.total_tags],
+        ["Forks", overview.total_forks],
+        ["Collections", overview.total_collections],
       ]
     : [];
 
@@ -31,7 +31,7 @@ export default function AnalyticsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Usage and growth across the prompt knowledge base.
+          How your own prompts are performing — views, copies and growth.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <div>
-              <CardTitle>Prompt growth</CardTitle>
+              <CardTitle>Your prompt growth</CardTitle>
               <CardDescription>New prompts over time</CardDescription>
             </div>
             <Select
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>By type</CardTitle>
+            <CardTitle>Your prompts by type</CardTitle>
             <CardDescription>Prompt distribution</CardDescription>
           </CardHeader>
           <CardContent>

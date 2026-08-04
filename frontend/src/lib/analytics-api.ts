@@ -3,15 +3,15 @@
 import { apiFetch } from "@/lib/api";
 import type { PromptSummary } from "@/types";
 
+/** Headline numbers for the signed-in user's own prompts. */
 export interface OverviewStats {
   total_prompts: number;
-  total_categories: number;
   total_collections: number;
   total_projects: number;
-  total_tags: number;
   total_views: number;
   total_copies: number;
   total_likes: number;
+  total_forks: number;
 }
 
 export interface Contributor {
@@ -32,7 +32,7 @@ export interface TypeCount {
 }
 
 export const analyticsApi = {
-  overview: () => apiFetch<OverviewStats>("/analytics/overview", { auth: false }),
+  overview: () => apiFetch<OverviewStats>("/analytics/overview"),
   trending: (limit = 6) =>
     apiFetch<PromptSummary[]>(`/analytics/trending?limit=${limit}`, { auth: false }),
   latest: (limit = 6) =>
@@ -40,6 +40,6 @@ export const analyticsApi = {
   contributors: (limit = 5) =>
     apiFetch<Contributor[]>(`/analytics/contributors?limit=${limit}`, { auth: false }),
   growth: (days = 30) =>
-    apiFetch<GrowthPoint[]>(`/analytics/growth?days=${days}`, { auth: false }),
-  byType: () => apiFetch<TypeCount[]>("/analytics/by-type", { auth: false }),
+    apiFetch<GrowthPoint[]>(`/analytics/growth?days=${days}`),
+  byType: () => apiFetch<TypeCount[]>("/analytics/by-type"),
 };

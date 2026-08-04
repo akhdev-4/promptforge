@@ -8,14 +8,15 @@ from pydantic import BaseModel
 
 
 class OverviewStats(BaseModel):
+    """Headline numbers for one author's own work."""
+
     total_prompts: int
-    total_categories: int
     total_collections: int
     total_projects: int
-    total_tags: int
     total_views: int
     total_copies: int
     total_likes: int
+    total_forks: int
 
 
 class Contributor(BaseModel):

@@ -1,10 +1,15 @@
-"""Analytics endpoints (public read)."""
+"""Analytics endpoints.
+
+Trending / latest / contributors stay global — they power the Dashboard's view
+of the whole library. Overview, growth and by-type are personal: they answer
+"how is *my* work doing", so they require a signed-in user and are scoped to it.
+"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import DbSession
+from app.api.deps import CurrentUser, DbSession
 from app.models.enums import PromptStatus
 from app.repositories.prompt import PromptRepository, SortKey
 from app.schemas.analytics import Contributor, GrowthPoint, OverviewStats, TypeCount
@@ -14,9 +19,13 @@ from app.services.analytics import AnalyticsService
 router = APIRouter()
 
 
-@router.get("/overview", response_model=OverviewStats, summary="Headline totals")
-async def overview(db: DbSession) -> OverviewStats:
-    return await AnalyticsService(db).overview()
+@router.get(
+    "/overview",
+    response_model=OverviewStats,
+    summary="Headline totals for your own prompts",
+)
+async def overview(db: DbSession, user: CurrentUser) -> OverviewStats:
+    return await AnalyticsService(db).overview(author_id=user.id)
 
 
 @router.get(
@@ -53,11 +62,21 @@ async def contributors(db: DbSession, limit: int = Query(5, ge=1, le=20)) -> lis
     return await AnalyticsService(db).top_contributors(limit)
 
 
-@router.get("/growth", response_model=list[GrowthPoint], summary="Prompt growth over time")
-async def growth(db: DbSession, days: int = Query(30, ge=7, le=90)) -> list[GrowthPoint]:
-    return await AnalyticsService(db).growth(days)
+@router.get(
+    "/growth",
+    response_model=list[GrowthPoint],
+    summary="Your prompt growth over time",
+)
+async def growth(
+    db: DbSession, user: CurrentUser, days: int = Query(30, ge=7, le=90)
+) -> list[GrowthPoint]:
+    return await AnalyticsService(db).growth(days, author_id=user.id)
 
 
-@router.get("/by-type", response_model=list[TypeCount], summary="Prompt count by type")
-async def by_type(db: DbSession) -> list[TypeCount]:
-    return await AnalyticsService(db).by_type()
+@router.get(
+    "/by-type",
+    response_model=list[TypeCount],
+    summary="Your prompt count by type",
+)
+async def by_type(db: DbSession, user: CurrentUser) -> list[TypeCount]:
+    return await AnalyticsService(db).by_type(author_id=user.id)
