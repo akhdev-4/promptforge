@@ -20,6 +20,7 @@ import {
   sortOptions,
 } from "@/lib/prompt-meta";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import type { CategoryNode, PromptSort, PromptType } from "@/types";
 
 const PAGE_SIZE = 12;
@@ -151,7 +152,10 @@ function PromptsLibrary() {
   const [lane, setLane] = React.useState<Lane>("all");
   const [activeTags, setActiveTags] = React.useState<string[]>([]);
   const [sort, setSort] = React.useState<PromptSort>("newest");
+  // Drafts are private to their author, so this only makes sense signed in.
+  const [showDrafts, setShowDrafts] = React.useState(false);
   const [page, setPage] = React.useState(1);
+  const user = useAuthStore((s) => s.user);
 
   const { data: tree } = useCategoryTree();
   const { data: popularTags } = usePopularTags(20);
@@ -227,6 +231,7 @@ function PromptsLibrary() {
     ...categoryFilter,
     component_id: componentId || undefined,
     tags: activeTags.length ? activeTags : undefined,
+    status: showDrafts ? "draft" : undefined,
     sort,
   });
 
@@ -327,6 +332,20 @@ function PromptsLibrary() {
             ))}
           </Select>
         </div>
+        {user && (
+          <div className="w-full sm:w-40">
+            <Select
+              value={showDrafts ? "draft" : "published"}
+              onChange={(e) => {
+                setShowDrafts(e.target.value === "draft");
+                setPage(1);
+              }}
+            >
+              <option value="published">Published</option>
+              <option value="draft">My drafts</option>
+            </Select>
+          </div>
+        )}
         <div className="w-full sm:w-44">
           <Select value={sort} onChange={(e) => setSort(e.target.value as PromptSort)}>
             {sortOptions.map(([v, l]) => (

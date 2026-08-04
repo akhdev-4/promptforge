@@ -16,9 +16,9 @@ from app.api.deps import (
     require_admin,
     require_contributor,
 )
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import AuthenticationError, NotFoundError
 from app.models.enums import PromptStatus, PromptType
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.playground import get_run_provider, render_prompt
 from app.recommendations import get_related_provider
 from app.repositories.prompt import SortKey
@@ -78,6 +78,7 @@ async def create_prompt(
 @router.get("", response_model=Page[PromptSummary], summary="List / search prompts")
 async def list_prompts(
     db: DbSession,
+    user: OptionalUser,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     q: str | None = Query(None, description="Full-text-ish search over title/description/content"),
@@ -95,6 +96,15 @@ async def list_prompts(
     tags: list[str] | None = Query(None, description="Tag slugs; matches any"),
     sort: SortKey = "newest",
 ) -> Page[PromptSummary]:
+    # Unpublished prompts (drafts, archived) are visible only to their own
+    # author — moderators excepted. Without this, anyone could list everyone
+    # else's work-in-progress just by asking for ?status=draft.
+    if status != PromptStatus.PUBLISHED:
+        if user is None:
+            raise AuthenticationError("Sign in to browse your unpublished prompts")
+        if not user.role.satisfies(UserRole.MODERATOR):
+            author_id = user.id
+
     params = PageParams(page=page, size=size)
     items, total = await PromptService(db).search(
         offset=params.offset,

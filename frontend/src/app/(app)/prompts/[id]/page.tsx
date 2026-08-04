@@ -53,6 +53,7 @@ import {
   usePrompt,
   usePromptVersions,
   useRelatedPrompts,
+  useUpdatePrompt,
 } from "@/hooks/use-prompts";
 import { cn } from "@/lib/utils";
 import { complexityLabels, promptTypeLabels, statusLabels } from "@/lib/prompt-meta";
@@ -82,6 +83,7 @@ export default function PromptDetailPage() {
   const { data: prompt, isLoading, isError } = usePrompt(id);
   const { data: versions } = usePromptVersions(id);
   const del = useDeletePrompt();
+  const update = useUpdatePrompt(id);
   const fork = useForkPrompt();
   const confirm = useConfirm();
   const toast = useToast();
@@ -179,6 +181,11 @@ export default function PromptDetailPage() {
   );
   if (canEdit) tabs.push({ value: "assets", label: "Manage previews" });
 
+  const onPublish = async () => {
+    await update.mutateAsync({ status: "published" });
+    toast.success("Published — it's now in the library.");
+  };
+
   const onDelete = async () => {
     const ok = await confirm({
       title: "Delete prompt?",
@@ -207,6 +214,20 @@ export default function PromptDetailPage() {
 
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        {/* A fork starts as a draft, so it won't be in the library until it's
+            published — say so plainly instead of letting it seem to vanish. */}
+        {prompt.status === "draft" && canEdit && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+            <p className="text-sm">
+              <strong>This is a draft.</strong> Only you can see it — it won&rsquo;t
+              appear in the library or search until you publish it.
+            </p>
+            <Button size="sm" onClick={onPublish} disabled={update.isPending}>
+              {update.isPending ? "Publishing…" : "Publish"}
+            </Button>
+          </div>
+        )}
+
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="default">{promptTypeLabels[prompt.prompt_type]}</Badge>

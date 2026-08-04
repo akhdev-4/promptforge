@@ -200,3 +200,39 @@ async def test_version_history_names_its_author(client: AsyncClient) -> None:
     latest = (await client.get(f"{PROMPTS}/{fork['id']}/versions")).json()[0]
     assert latest["version_number"] == 2
     assert latest["author"]["username"] == forker["username"]
+
+
+@pytest.mark.asyncio
+async def test_drafts_are_private_to_their_author(client: AsyncClient) -> None:
+    _, mine = await make_user(client)
+    _, theirs = await make_user(client)
+    draft = await _create(client, mine, title="My unfinished idea", status="draft")
+
+    # Anonymous callers can't browse unpublished prompts at all.
+    assert (await client.get(f"{PROMPTS}?status=draft")).status_code == 401
+
+    # Another signed-in user sees their own drafts, never yours.
+    others = await client.get(f"{PROMPTS}?status=draft", headers=theirs)
+    assert others.status_code == 200
+    assert all(p["id"] != draft["id"] for p in others.json()["items"])
+
+    # The author does see it.
+    ours = await client.get(f"{PROMPTS}?status=draft", headers=mine)
+    assert any(p["id"] == draft["id"] for p in ours.json()["items"])
+
+    # And it stays out of the public library.
+    public = await client.get(f"{PROMPTS}?q=My unfinished idea")
+    assert all(p["id"] != draft["id"] for p in public.json()["items"])
+
+
+@pytest.mark.asyncio
+async def test_fork_starts_as_a_draft(client: AsyncClient) -> None:
+    _, author = await make_user(client)
+    _, forker = await make_user(client)
+    prompt = await _create(client, author)
+
+    fork = (
+        await client.post(f"{PROMPTS}/{prompt['id']}/fork", headers=forker)
+    ).json()
+    # Explains the "my fork vanished" report: it's a draft, so the library hides it.
+    assert fork["status"] == "draft"
