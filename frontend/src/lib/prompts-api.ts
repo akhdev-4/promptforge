@@ -49,11 +49,11 @@ function toQuery(params: Record<string, unknown>): string {
 }
 
 export const promptsApi = {
+  // Optional auth: the token is attached only when signed in, so anonymous
+  // browsing still works while "My drafts" (which the server scopes to the
+  // caller) can actually authenticate.
   list: (params: PromptListParams = {}) =>
-    apiFetch<Page<PromptSummary>>(
-      `/prompts${toQuery(params as Record<string, unknown>)}`,
-      { auth: false },
-    ),
+    apiFetch<Page<PromptSummary>>(`/prompts${toQuery(params as Record<string, unknown>)}`),
 
   // Authenticated when logged in (so is_bookmarked / is_liked reflect the
   // current user), still works anonymously for public viewers.
