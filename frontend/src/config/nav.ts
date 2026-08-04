@@ -3,6 +3,7 @@ import {
   Blocks,
   BookMarked,
   FolderKanban,
+  FileEdit,
   Heart,
   LayoutDashboard,
   Library,
@@ -42,6 +43,7 @@ export const navSections: NavSection[] = [
       { label: "Categories", href: "/categories", icon: Tags },
       { label: "Collections", href: "/collections", icon: BookMarked },
       { label: "Favorites", href: "/favorites", icon: Heart },
+      { label: "My Drafts", href: "/prompts?status=draft", icon: FileEdit },
     ],
   },
   {

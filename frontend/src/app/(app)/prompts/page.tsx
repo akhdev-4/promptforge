@@ -152,8 +152,8 @@ function PromptsLibrary() {
   const [lane, setLane] = React.useState<Lane>("all");
   const [activeTags, setActiveTags] = React.useState<string[]>([]);
   const [sort, setSort] = React.useState<PromptSort>("newest");
-  // Drafts are private to their author, so this only makes sense signed in.
-  const [showDrafts, setShowDrafts] = React.useState(false);
+  // Driven by the URL so the sidebar's "My Drafts" entry links straight here.
+  const showDrafts = searchParams.get("status") === "draft";
   const [page, setPage] = React.useState(1);
   const user = useAuthStore((s) => s.user);
 
@@ -239,9 +239,13 @@ function PromptsLibrary() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Prompt Library</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {showDrafts ? "My Drafts" : "Prompt Library"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pick a lane below — app development or AI &amp; creative — then search and filter.
+            {showDrafts
+              ? "Unpublished prompts only you can see — including anything you've forked."
+              : "Pick a lane below — app development or AI & creative — then search and filter."}
           </p>
         </div>
         <Button asChild>
@@ -332,20 +336,6 @@ function PromptsLibrary() {
             ))}
           </Select>
         </div>
-        {user && (
-          <div className="w-full sm:w-40">
-            <Select
-              value={showDrafts ? "draft" : "published"}
-              onChange={(e) => {
-                setShowDrafts(e.target.value === "draft");
-                setPage(1);
-              }}
-            >
-              <option value="published">Published</option>
-              <option value="draft">My drafts</option>
-            </Select>
-          </div>
-        )}
         <div className="w-full sm:w-44">
           <Select value={sort} onChange={(e) => setSort(e.target.value as PromptSort)}>
             {sortOptions.map(([v, l]) => (

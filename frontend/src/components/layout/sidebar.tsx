@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 
 import { navSections } from "@/config/nav";
@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/auth";
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const search = useSearchParams();
   const role = useAuthStore((s) => s.user?.role);
   const canModerate = role === "moderator" || role === "administrator";
 
@@ -35,8 +36,14 @@ export function Sidebar({ className }: { className?: string }) {
               {section.items
                 .filter((item) => !item.moderatorOnly || canModerate)
                 .map((item) => {
-                const active =
-                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                // Some entries point at the same page with a query (e.g. the
+                // library filtered to drafts), so match the query too.
+                const [itemPath, itemQuery] = item.href.split("?");
+                const samePath =
+                  pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+                const active = itemQuery
+                  ? samePath && search.toString() === itemQuery
+                  : samePath && !search.get("status");
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>
