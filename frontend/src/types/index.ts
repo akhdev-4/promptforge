@@ -437,6 +437,8 @@ export interface PromptVersion {
   content: string;
   change_summary: string | null;
   author_id: string | null;
+  /** Who wrote this version — can differ from the prompt's author after a fork. */
+  author: PromptAuthor | null;
   created_at: string;
 }
 

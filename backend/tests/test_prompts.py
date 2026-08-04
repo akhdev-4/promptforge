@@ -171,3 +171,32 @@ async def test_list_excludes_drafts_by_default(client: AsyncClient) -> None:
     titles = [p["title"] for p in resp.json()["items"]]
     assert "Published One" in titles
     assert "Draft One" not in titles
+
+
+@pytest.mark.asyncio
+async def test_version_history_names_its_author(client: AsyncClient) -> None:
+    author, author_headers = await make_user(client)
+    forker, forker_headers = await make_user(client)
+    prompt = await _create(client, author_headers)
+
+    fork = (
+        await client.post(f"{PROMPTS}/{prompt['id']}/fork", headers=forker_headers)
+    ).json()
+
+    versions = (await client.get(f"{PROMPTS}/{fork['id']}/versions")).json()
+    v1 = versions[0]
+    # The fork's v1 is credited to whoever forked it...
+    assert v1["author"]["username"] == forker["username"]
+    # ...and the note points back at the original and its author.
+    assert prompt["title"] in v1["change_summary"]
+    assert author["username"] in v1["change_summary"]
+
+    # A later version is credited to whoever wrote it.
+    await client.post(
+        f"{PROMPTS}/{fork['id']}/versions",
+        json={"content": "Reworked for Vue.", "change_summary": "Port to Vue"},
+        headers=forker_headers,
+    )
+    latest = (await client.get(f"{PROMPTS}/{fork['id']}/versions")).json()[0]
+    assert latest["version_number"] == 2
+    assert latest["author"]["username"] == forker["username"]

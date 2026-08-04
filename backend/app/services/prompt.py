@@ -187,12 +187,20 @@ class PromptService:
             author_id=user.id,
             forked_from_id=source.id,
         )
+        # Credit the original author in the note, so the history explains where
+        # v1 came from as well as who created the fork.
+        origin = source.author
+        credit = (
+            f"@{origin.username}"
+            if origin and origin.username
+            else (origin.full_name if origin and origin.full_name else "another user")
+        )
         await self.versions.create(
             prompt_id=fork.id,
             version_number=1,
             title=fork.title,
             content=fork.content,
-            change_summary=f"Forked from {source.slug}",
+            change_summary=f"Forked from “{source.title}” by {credit}",
             author_id=user.id,
         )
         await self.prompts.increment(source, "forks_count")

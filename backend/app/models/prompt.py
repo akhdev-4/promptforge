@@ -146,6 +146,9 @@ class PromptVersion(UUIDMixin, TimestampMixin, Base):
     )
 
     prompt: Mapped[Prompt] = relationship(back_populates="versions")
+    # Eager-loaded so the history can name who wrote each version without an
+    # N+1 query. Nullable because the FK is SET NULL when an account is deleted.
+    author: Mapped[User | None] = relationship(lazy="joined")
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<PromptVersion prompt={self.prompt_id} v{self.version_number}>"

@@ -562,6 +562,31 @@ export default function PromptDetailPage() {
                             {formatDate(v.created_at)}
                           </span>
                         </div>
+                        {/* Who wrote this version — differs from the prompt's
+                            author on a fork, or with multiple contributors. */}
+                        {v.author && (
+                          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-[8px] font-semibold text-primary">
+                              {v.author.avatar_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={v.author.avatar_url}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                (v.author.full_name ?? v.author.username ?? "?")
+                                  .charAt(0)
+                                  .toUpperCase()
+                              )}
+                            </span>
+                            <span className="truncate">
+                              by{" "}
+                              {v.author.full_name ??
+                                (v.author.username ? `@${v.author.username}` : "unknown")}
+                            </span>
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {v.change_summary ?? "No summary"}
                         </p>

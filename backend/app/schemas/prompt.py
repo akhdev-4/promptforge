@@ -48,6 +48,8 @@ class PromptVersionRead(BaseModel):
     content: str
     change_summary: str | None
     author_id: uuid.UUID | None
+    # Who wrote this version — may differ from the prompt's author after a fork.
+    author: PromptAuthor | None = None
     created_at: datetime
 
 
