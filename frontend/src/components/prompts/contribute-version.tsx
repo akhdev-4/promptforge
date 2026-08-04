@@ -16,10 +16,19 @@ import { ApiError } from "@/lib/api";
  * Lets someone who isn't the owner add a version to an open prompt. The owner
  * uses the Edit page instead, which also covers metadata.
  */
-export function ContributeVersion({ promptId }: { promptId: string }) {
+export function ContributeVersion({
+  promptId,
+  open,
+  onOpenChange,
+}: {
+  promptId: string;
+  /** Controlled so the Fork nudge can open this form directly. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const addVersion = useAddVersion(promptId);
   const toast = useToast();
-  const [open, setOpen] = React.useState(false);
+  const setOpen = onOpenChange;
   const [content, setContent] = React.useState("");
   const [summary, setSummary] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);

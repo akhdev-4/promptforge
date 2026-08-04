@@ -94,6 +94,7 @@ export default function PromptDetailPage() {
   const rate = useRatePrompt(id);
   const { data: related } = useRelatedPrompts(id);
   const [tab, setTab] = React.useState("overview");
+  const [contributeOpen, setContributeOpen] = React.useState(false);
   const [pgSeen, setPgSeen] = React.useState(true); // assume seen until we read storage (avoids flash)
   const panelRef = React.useRef<HTMLDivElement>(null);
   const deepLinked = React.useRef(false);
@@ -201,6 +202,22 @@ export default function PromptDetailPage() {
     router.push("/prompts");
   };
   const onFork = async () => {
+    // If this prompt welcomes improvements, offer that before splitting it in
+    // two — a contribution keeps the work (and the credit) on the original.
+    if (prompt.can_contribute && !canEdit) {
+      const forkAnyway = await confirm({
+        title: "Fork this prompt?",
+        description:
+          "This prompt is open to contributions — you can add a version to the original instead, credited to you. Forking makes a separate copy that you own.",
+        confirmLabel: "Fork anyway",
+        altLabel: "Add a version instead",
+        onAlt: () => {
+          setTab("versions");
+          setContributeOpen(true);
+        },
+      });
+      if (!forkAnyway) return;
+    }
     const forked = await fork.mutateAsync(prompt.id);
     router.push(`/prompts/${forked.id}`);
   };
@@ -532,7 +549,11 @@ export default function PromptDetailPage() {
               {/* Non-owners who may contribute get a way in here, since the
                   Edit page (metadata + delete) stays owner-only. */}
               {prompt.can_contribute && !canEdit && (
-                <ContributeVersion promptId={prompt.id} />
+                <ContributeVersion
+                  promptId={prompt.id}
+                  open={contributeOpen}
+                  onOpenChange={setContributeOpen}
+                />
               )}
               {versions && versions.length >= 2 && (
                 <Card>

@@ -11,6 +11,13 @@ export interface ConfirmOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /**
+   * Optional third choice — an alternative to the main action rather than a
+   * cancel. Picking it runs `onAlt` and resolves false, so callers still just
+   * check the boolean to decide whether to proceed.
+   */
+  altLabel?: string;
+  onAlt?: () => void;
 }
 
 type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
@@ -72,10 +79,22 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                   {pending.options.description}
                 </div>
               )}
-              <div className="mt-6 flex justify-end gap-2">
+              <div className="mt-6 flex flex-wrap justify-end gap-2">
                 <Button variant="ghost" size="sm" onClick={() => settle(false)}>
                   {pending.options.cancelLabel ?? "Cancel"}
                 </Button>
+                {pending.options.altLabel && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      pending.options.onAlt?.();
+                      settle(false);
+                    }}
+                  >
+                    {pending.options.altLabel}
+                  </Button>
+                )}
                 <Button
                   variant={pending.options.destructive ? "destructive" : "default"}
                   size="sm"
