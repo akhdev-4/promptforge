@@ -229,6 +229,9 @@ export interface PromptDetail extends PromptSummary {
   forked_from_id: string | null;
   component: ComponentRefFull | null;
   assets: PromptAsset[];
+  allow_contributions: boolean;
+  /** Whether the signed-in viewer may add a version to this prompt. */
+  can_contribute: boolean;
   is_liked: boolean;
   is_bookmarked: boolean;
   my_rating: number | null;
@@ -462,6 +465,8 @@ export interface PromptCreateInput {
   component_id?: string | null;
   tags?: string[];
   team_id?: string | null;
+  /** Let any signed-in user add versions instead of forking. */
+  allow_contributions?: boolean;
 }
 
 export type PromptUpdateInput = Partial<Omit<PromptCreateInput, "content">>;

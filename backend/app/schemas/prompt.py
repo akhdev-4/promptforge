@@ -79,6 +79,8 @@ class PromptBase(BaseModel):
 class PromptCreate(PromptBase):
     content: str = Field(min_length=1)
     status: PromptStatus = PromptStatus.PUBLISHED
+    # Let anyone signed in add versions instead of having to fork.
+    allow_contributions: bool = False
     category_id: uuid.UUID | None = None
     component_id: uuid.UUID | None = None
     tags: list[str] = Field(default_factory=list, max_length=20)
@@ -104,6 +106,7 @@ class PromptUpdate(BaseModel):
     prompt_type: PromptType | None = None
     complexity: Complexity | None = None
     status: PromptStatus | None = None
+    allow_contributions: bool | None = None
     framework: str | None = Field(default=None, max_length=60)
     language: str | None = Field(default=None, max_length=60)
     ai_model: str | None = Field(default=None, max_length=60)
@@ -161,6 +164,9 @@ class PromptDetail(PromptSummary):
     forked_from_id: uuid.UUID | None
     component: PromptComponentRef | None
     assets: list[AssetRead]
+    allow_contributions: bool = False
+    # Whether the current viewer may add a version (owner, teammate, or open).
+    can_contribute: bool = False
     is_liked: bool = False
     is_bookmarked: bool = False
     my_rating: int | None = None

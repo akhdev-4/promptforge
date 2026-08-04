@@ -166,9 +166,11 @@ async def get_prompt(
     ):
         raise NotFoundError("Prompt not found")
 
-    prompt = await PromptService(db).get_detail(prompt_id)
+    service = PromptService(db)
+    prompt = await service.get_detail(prompt_id)
     detail = PromptDetail.model_validate(prompt)
     detail.team_id = team_id
+    detail.can_contribute = await service.can_contribute(prompt, user)
     if user is not None:
         interactions = InteractionService(db)
         liked, bookmarked = await interactions.flags(user.id, prompt_id)

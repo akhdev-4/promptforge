@@ -46,6 +46,7 @@ const schema = z.object({
   ai_model: z.string().max(60).optional(),
   category_id: z.string().optional(),
   team_id: z.string().optional(),
+  allow_contributions: z.boolean().optional(),
   estimated_tokens: z.string().optional(),
   expected_output: z.string().optional(),
   demo_url: z.url("Must be a URL").optional().or(z.literal("")),
@@ -120,6 +121,7 @@ export function PromptForm({
       ai_model: initial?.ai_model ?? "",
       category_id: initial?.category?.id ?? "",
       team_id: mode === "create" ? (teamId ?? "") : "",
+      allow_contributions: initial?.allow_contributions ?? false,
       estimated_tokens:
         initial?.estimated_tokens != null ? String(initial.estimated_tokens) : "",
       expected_output: initial?.expected_output ?? "",
@@ -149,6 +151,7 @@ export function PromptForm({
       category_id: values.category_id || null,
       component_id: componentId ?? initial?.component?.id ?? null,
       team_id: mode === "create" ? values.team_id || null : null,
+      allow_contributions: values.allow_contributions ?? false,
       tags,
       estimated_tokens: Number.isFinite(tokensNum) ? tokensNum : null,
       expected_output: values.expected_output || null,
@@ -248,6 +251,22 @@ export function PromptForm({
               </Select>
             </Field>
           )}
+          <Field label="Contributions">
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                {...register("allow_contributions")}
+              />
+              <span>
+                Let others improve this prompt
+                <span className="block text-xs text-muted-foreground">
+                  Any signed-in user can add a new version. Each version is credited
+                  to whoever wrote it, and only you can edit details or delete it.
+                </span>
+              </span>
+            </label>
+          </Field>
           <Field label="Tags">
             <TagInput
               value={tags}

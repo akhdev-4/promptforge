@@ -236,3 +236,44 @@ async def test_fork_starts_as_a_draft(client: AsyncClient) -> None:
     ).json()
     # Explains the "my fork vanished" report: it's a draft, so the library hides it.
     assert fork["status"] == "draft"
+
+
+@pytest.mark.asyncio
+async def test_open_prompts_accept_contributions_from_anyone(client: AsyncClient) -> None:
+    owner_me, owner = await make_user(client)
+    helper_me, helper = await make_user(client)
+
+    prompt = await _create(client, owner, title="Open for improvement")
+    # Closed by default: a stranger can't touch it.
+    closed = await client.post(
+        f"{PROMPTS}/{prompt['id']}/versions",
+        json={"content": "better wording"},
+        headers=helper,
+    )
+    assert closed.status_code == 403
+
+    # The owner opens it up.
+    await client.patch(
+        f"{PROMPTS}/{prompt['id']}",
+        json={"allow_contributions": True},
+        headers=owner,
+    )
+
+    opened = await client.post(
+        f"{PROMPTS}/{prompt['id']}/versions",
+        json={"content": "better wording", "change_summary": "Clarified the constraints"},
+        headers=helper,
+    )
+    assert opened.status_code == 201, opened.text
+
+    # One prompt, two names in its history.
+    versions = (await client.get(f"{PROMPTS}/{prompt['id']}/versions")).json()
+    assert versions[0]["author"]["username"] == helper_me["username"]
+    assert versions[1]["author"]["username"] == owner_me["username"]
+
+    # The detail payload tells each viewer whether they may contribute.
+    as_helper = (await client.get(f"{PROMPTS}/{prompt['id']}", headers=helper)).json()
+    assert as_helper["allow_contributions"] is True
+    assert as_helper["can_contribute"] is True
+    anon = (await client.get(f"{PROMPTS}/{prompt['id']}")).json()
+    assert anon["can_contribute"] is False

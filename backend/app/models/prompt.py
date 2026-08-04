@@ -12,6 +12,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    Boolean,
     Enum,
     Float,
     ForeignKey,
@@ -55,6 +56,11 @@ class Prompt(UUIDMixin, TimestampMixin, Base):
     )
     status: Mapped[PromptStatus] = mapped_column(
         _STATUS, default=PromptStatus.PUBLISHED, nullable=False, index=True
+    )
+    # Opt-in: let any signed-in user add versions, so the prompt can be improved
+    # in place instead of forked. Off by default — the owner decides.
+    allow_contributions: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
     )
 
     # --- Tech metadata (free-form; unlimited values) --------------------------

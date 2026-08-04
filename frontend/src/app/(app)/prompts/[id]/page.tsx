@@ -13,6 +13,7 @@ import {
   Pencil,
   Play,
   Trash2,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ import * as React from "react";
 import { AddToCollection } from "@/components/prompts/add-to-collection";
 import { AssetManager } from "@/components/prompts/asset-manager";
 import { CodeView } from "@/components/prompts/code-view";
+import { ContributeVersion } from "@/components/prompts/contribute-version";
 import { CopyButton } from "@/components/prompts/copy-button";
 import { LivePreview } from "@/components/prompts/live-preview";
 import { MarkdownView } from "@/components/prompts/markdown-view";
@@ -238,6 +240,11 @@ export default function PromptDetailPage() {
             {prompt.forked_from_id && (
               <Badge variant="outline">
                 <GitFork className="mr-1 h-3 w-3" /> Fork
+              </Badge>
+            )}
+            {prompt.allow_contributions && (
+              <Badge variant="outline" title="Anyone signed in can add a new version">
+                <Users className="mr-1 h-3 w-3" /> Open to contributions
               </Badge>
             )}
             {prompt.team_id && (
@@ -522,6 +529,11 @@ export default function PromptDetailPage() {
 
           {tab === "versions" && (
             <div className="space-y-6">
+              {/* Non-owners who may contribute get a way in here, since the
+                  Edit page (metadata + delete) stays owner-only. */}
+              {prompt.can_contribute && !canEdit && (
+                <ContributeVersion promptId={prompt.id} />
+              )}
               {versions && versions.length >= 2 && (
                 <Card>
                   <CardHeader>

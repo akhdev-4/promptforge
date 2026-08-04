@@ -69,14 +69,22 @@ class PromptService:
     def _can_delete(prompt: Prompt, user: User) -> bool:
         return prompt.author_id == user.id or user.role.satisfies(UserRole.ADMINISTRATOR)
 
+    async def can_contribute(self, prompt: Prompt, user: User | None) -> bool:
+        """Public wrapper so endpoints can tell the client what it may do."""
+        return bool(user) and await self._can_contribute(prompt, user)  # type: ignore[arg-type]
+
     async def _can_contribute(self, prompt: Prompt, user: User) -> bool:
         """Who may add a *version* to an existing prompt.
 
-        Wider than :meth:`_can_edit`: teammates can co-author a prompt that's
-        private to their team, so its history carries several names instead of
-        forcing a fork. Deleting and metadata edits stay with the owner.
+        Wider than :meth:`_can_edit`, in two ways: the owner can open a prompt
+        to contributions from any signed-in user, and teammates can always
+        co-author a prompt private to their team. Either way the history gains
+        several names instead of forcing a fork. Deleting and metadata edits
+        stay with the owner.
         """
         if self._can_edit(prompt, user):
+            return True
+        if prompt.allow_contributions and user.role.satisfies(UserRole.CONTRIBUTOR):
             return True
         team_id = (
             await self.session.execute(
